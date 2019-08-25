@@ -6,7 +6,7 @@ body {
 
 img {
   object-fit: cover;
-  padding-right: 30px;
+  padding-left: 30px;
   border-radius: 20%;
 }
 
@@ -116,7 +116,7 @@ li {
     color: #333;
 }
 
-li.hover {
+footer.hover {
     color: #4682B4;
 }
 
