@@ -37,7 +37,8 @@ a {
 }
 
 a:hover {
-    text-decoration: overline underline;
+    color: #4682B4;
+    font-weight: bold;
 }
 
 a.int {
@@ -113,6 +114,10 @@ li {
     font-size: 1em;
     line-height: 1.4em;
     color: #333;
+}
+
+li.hover {
+    color: #4682B4;
 }
 
 ul {
