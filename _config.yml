@@ -1,6 +1,6 @@
 ---
-title: utooley.github.io
-timezone: UTC
+title: jastiso.github.io
+timezone: EST
 collections:
   posts:
     title: Posts
@@ -8,6 +8,6 @@ collections:
   uploads:
     title: Uploads
     output: true
-name: Ursula Tooley
+name: Jennifer Stiso
 markdown: kramdown
 permalink: /news/:year/:month/:day/:title
