@@ -47,11 +47,11 @@ a.int {
 }
 
 a.int:hover {
-    text-decoration: overline;
+    color: #4682B4;
 }
 
 a.int:focus {
-    text-decoration: overline;
+    color: #4682B4;
 }
 
 a.ext {
@@ -61,7 +61,7 @@ a.ext {
 }
 
 a.ext:hover {
-    text-decoration: overline;
+    color: #4682B4;
 }
 
 a.paper {
