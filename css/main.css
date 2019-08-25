@@ -1,5 +1,5 @@
 body {
-  font-family: Tahoma;
+  font-family: 'Helvetica';
     max-width: 800px;
     margin: 0 auto;
 }
@@ -71,7 +71,7 @@ a.ext:hover {
 a.paper {
     font-family:Sans-serif;
     text-decoration: none;
-    color: #f01818;
+    color: #191970;
 }
 
 a.paper:hover {
