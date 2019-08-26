@@ -1,6 +1,6 @@
 body {
   font-family: 'Helvetica';
-    max-width: 800px;
+    max-width: 1000px;
     margin: 0 auto;
 }
 
@@ -8,10 +8,6 @@ img {
   object-fit: cover;
   padding-left: 30px;
   border-radius: 50%;
-}
-
-img_paper {
-  object-fit: cover;
 }
 
 
