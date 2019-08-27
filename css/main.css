@@ -47,6 +47,10 @@ a:hover {
     font-weight: bold;
 }
 
+i:hover {
+    color: #4682B4;
+}
+
 a.int {
     font-family:Sans-serif;
     text-decoration: none;
@@ -122,9 +126,6 @@ li {
     color: #333;
 }
 
-footer.hover {
-    color: #4682B4;
-}
 
 ul {
     font-family:Sans-serif;
