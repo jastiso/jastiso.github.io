@@ -7,7 +7,13 @@ body {
 img {
   object-fit: cover;
   padding-left: 30px;
-  border-radius: 20%;
+  border-radius: 50%;
+}
+
+img.paper {
+  object-fit: cover;
+  padding-left: 0px;
+  border-radius: 0%;
 }
 
 
