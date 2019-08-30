@@ -1,6 +1,7 @@
 body {
   font-family: 'Helvetica';
-    max-width: 1000px;
+    width: 100%;
+    min-height: 100%;
     margin: 0 auto;
 }
 
@@ -101,7 +102,7 @@ h2 {
     font-size: 4;
     font-family: Sans-serif;
     font-weight: normal;
-    
+
 }
 
 h3 {
