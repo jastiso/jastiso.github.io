@@ -6,7 +6,7 @@ body {
 
 img {
   object-fit: cover;
-  padding-left: 50px;
+  padding: 50px;
   border-radius: 50%;
   max-width: 100%;
   height:auto;
@@ -26,7 +26,7 @@ img.floatl{
 
 img.paper {
   object-fit: cover;
-  padding-left: 0px;
+  padding: 0px;
   border-radius: 0%;
 }
 
