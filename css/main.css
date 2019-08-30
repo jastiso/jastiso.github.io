@@ -16,6 +16,10 @@ img.floatr{
     float: right;
 }
 
+.aligned{
+    vertical-align: middle;
+}
+
 img.floatl{
     float: left;
 }
