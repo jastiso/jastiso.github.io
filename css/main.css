@@ -16,6 +16,10 @@ img.floatr{
     float: right;
 }
 
+img.floatl{
+    float: left;
+}
+
 img.paper {
   object-fit: cover;
   padding-left: 0px;
