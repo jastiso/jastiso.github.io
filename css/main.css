@@ -9,6 +9,8 @@ img {
   object-fit: cover;
   padding-left: 50px;
   border-radius: 50%;
+  max-width: 100%;
+  height:auto;
 }
 
 img.paper {
