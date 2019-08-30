@@ -152,6 +152,7 @@ footer {
     position: sticky;
     bottom: -1px;
     overflow: visible;
+    clear: both;
 }
 
 ul.posts {
