@@ -18,6 +18,7 @@ img.floatr{
 
 .aligned{
     vertical-align: middle;
+    display: inline-block;
 }
 
 img.floatl{
