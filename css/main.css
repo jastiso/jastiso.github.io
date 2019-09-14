@@ -23,7 +23,7 @@ img {
 }
 
 .column {
-  width: 40%;
+  width: 30%;
   position: fixed;
   z-index: 1;
   overflow-x: hidden;
