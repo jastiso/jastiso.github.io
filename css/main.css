@@ -14,6 +14,10 @@ img {
   height:auto;
 }
 
+body.blurb {
+    max-width: 50%;
+}
+
 img.floatr{
     float: right;
 }
