@@ -14,8 +14,24 @@ img {
   height:auto;
 }
 
-body.blurb {
-    max-width: 50%;
+.blurb {
+  height: 100%;
+  width: 60%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  left: 0;
+}
+
+.column {
+  height: 100%;
+  width: 40%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+  right: 0;
 }
 
 img.floatr{
