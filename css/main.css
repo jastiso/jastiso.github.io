@@ -1,6 +1,6 @@
 body {
     font-family: 'Helvetica';
-    max-width: : 900px;
+    max-width: 900px;
     overflow: auto;
 }
 
@@ -28,6 +28,11 @@ img {
   z-index: 1;
   overflow-x: hidden;
   right: 0;
+}
+
+.blurb {
+    max-width: 900px;
+    overflow: auto;
 }
 
 img.floatr{
