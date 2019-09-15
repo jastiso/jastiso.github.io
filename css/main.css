@@ -4,6 +4,7 @@ body {
     padding-left:20px;
     padding-right:20px;
     overflow: auto;
+    margin: auto;
 }
 
 img {
@@ -29,6 +30,7 @@ img {
   right: 0;
   float: right;
   padding-top: 50px;
+  margin-right: unset;
 }
 
 .blurb {
