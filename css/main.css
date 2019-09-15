@@ -26,6 +26,7 @@ img {
   overflow-x: hidden;
   right: 0;
   float: right;
+  padding-top: 50px;
 }
 
 .blurb {
