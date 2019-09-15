@@ -16,8 +16,6 @@ img {
 
 .split {
   width: 60%;
-  position: fixed;
-  z-index: 1;
   overflow-x: hidden;
   left: 0;
   float: left;
@@ -25,8 +23,6 @@ img {
 
 .column {
   width: 30%;
-  position: fixed;
-  z-index: 1;
   overflow-x: hidden;
   right: 0;
   float: right;
