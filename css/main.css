@@ -43,6 +43,7 @@ img.floatr{
 
 img.floatl{
     float: left;
+    padding: 20px;
 }
 
 img.floatup{
@@ -82,12 +83,12 @@ a {
 }
 
 a:hover {
-    color: #4682B4;
+    color: #474961;
     font-weight: bold;
 }
 
 i:hover {
-    color: #4682B4;
+    color: #474961;
 }
 
 a.int {
@@ -98,34 +99,34 @@ a.int {
 }
 
 a.int:hover {
-    color: #4682B4;
+    color: #474961;
     font-weight: bold;
 }
 
 a.int:focus {
-    color: #4682B4;
+    color: #474961;
     font-weight: bold;
 }
 
 a.ext {
     font-family:Sans-serif;
     text-decoration: none;
-    color: #191970;
+    color: #66698a;
 }
 
 a.ext:hover {
-    color: #4682B4;
+    color: #474961;
     font-weight: bold;
 }
 
 a.paper {
     font-family:Sans-serif;
     text-decoration: none;
-    color: #191970;
+    color: #66698a;
 }
 
 a.paper:hover {
-    color: #4682B4;
+    color: #474961;
     font-weight: bold;
 }
 
@@ -175,7 +176,7 @@ ul {
 }
 
 footer {
-    border-top: 1px solid #d5d5d5;
+    border-top: 1px solid #eef0ff;
     font-size: 1em;
     width: 100%;
     height: 60px;
