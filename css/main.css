@@ -56,6 +56,10 @@ img.paper {
   border-radius: 0%;
 }
 
+img.banner {
+    border-radius: 0% !important;
+}
+
 
 @media only screen and (max-width: 768px) {
   body {
