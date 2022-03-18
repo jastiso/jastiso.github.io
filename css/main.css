@@ -15,6 +15,14 @@ img {
   height:auto;
 }
 
+img.paperimg {
+  margin-left: auto;
+  display: grid;
+  margin-right: auto;
+  width: 20%;
+  padding: 50px;
+}
+
 .split {
   width: 60%;
   overflow-x: hidden;
