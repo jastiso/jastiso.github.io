@@ -61,8 +61,8 @@ DGP EQUATIONS
 
 Let's walk through the terms:
 * X the features
-* Y the risk
-* T the treatment
+* Y the outcome (can be binary or continuous)
+* T the treatment (it can be binary, continuous, or categorical)
 * g(x) some function mapping X to Y
 * m(x) some function mapping X to T
 * theta the treatment effect
@@ -184,11 +184,55 @@ during parameter selection, this method (called cross-fitting) avoids overfittin
 This is the DML method! Now I'll show you how to apply it.
  
 ### Code example
-* simulate data
-* treatment model
-* risk model
-* DML evaluator
-* CATE evaluatuion?
+We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, it will be usefull to check in with the steps listed above. For simplicity, we're going to use the same data generating process we discuessed above
+
+DATA GENERATING PROCESS
+
+As a reminder, X are our patient features, Y is a binary predictor of outcome or risk, and T is a binary indicator of treatment. Theta is the treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
+
+SIMULATING DATA CODE
+
+We're also going to split our data into folds for evaluation. It's important to remember that each training fold is going to be further split within the DML estimator, so we want to make sure there are enough observations in the fold to split further.
+
+DATA SPLITTING CODE
+
+The econML package has different 'estimator' functions that all take data, a Y model, and a T model as input. Therefore, we're going to start with step 2 listed above: estimating T (we'll do the data splitting process later). You can really do this however you want, we're just going to define a simple random forest model here. econML has the benefit of working with GridSearchCV object as well, so we're actually going to define not one speciifc model, but a set models with different parameterizations (if you aren't familiar with GridSearchCV, check out its docs).
+
+RF CODE
+
+We can do exactly the same thing for the Y model. Let's use a gradient boosted classifier to mix things up.
+
+GB CODE
+
+We can now pick an estimator. econML has 3 main estimators that provide confidence intervals. SparseLinear and Linear estimator will only work if you have many more observations than variables (see this link for comparisons of different estimators). For my data, this was not the case, so left me with 1 option: CausalForest estimator (REF). Like random forest models, this estimator also has the benefit of being able to estimate non-linear treatment effects in a piece-wise fashion.
+
+SINGE CAUSAL FOREST ESTIMATOR
+
+This function takes care of the cross-fitting procedure! The argument XX defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
+
+Also similar to RandomForestCLassifiers in scikit learn, the CausalForest estimator has many other parameters. If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weightnig option (XXX). This is because the causal forest method makes use of a specific weighting strategy already (REF). 
+
+Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearns Grid or RandomSearchCV functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one. For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run
+
+HYPRERPARAMETER CODE
+
+The 'score' function (if you use the default option) tells you the value of the cost function defining Neyman orthogonality. Its essentially telling you how close you were to finding a theta value that minimizes error/maximizes liklihood, and it stable for perturbations to your two machine learning models. Satisfying these two conditions assures an unbiased estimate of theta. While this number is a bit harder to interpret than MSE you might be used to, for the purpose of model or parameter selection it is satisfactory to select the model that gives the lowest score.
+
+SCORE CODE
+
+We can now fit the model using the parameters that gave the lowest score
+
+MODEL CODE
+
+To extract the treatment effects and their confidence intervals from the model, we can run the following:
+
+CATE CODE
+
+How'd we do? Since this is simulated data, we can see how well our estimated treament matches
+
+PLOT
+
+We did pretty well! As expected, given the simulated data. This concludes the extent of the code walkthrough. If you're still looking for more, check out the other resources I found useful below.
 
 ### Other resources
 * blogs (liking old twitter posts)
