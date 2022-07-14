@@ -4,10 +4,12 @@
 * comment on name
 Double machine learning is actually a way to esetimate causal effects in large, complex data that have a specific causal structure. Previously many causal 
 modeling methods relied on assuming a specific form of the data rather than learning it, and didn't allow with data with (DEFINITION OF COMPLEXITY), making them less useful in
- many modern data settings. DML allows these two to coexist, which is the source of much of the hype in economics. 
+ many modern data settings. DML allows these two to coexist, which is the source of much of the hype in economics and why I was interested in applying this method to clinincal decision models. 
+
+When I was trying to learn more about the method, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there had a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations. This is the info I wish I had when I was learning. 
 
 * problem
-Similarly, clinical machine learning projects have made a major push towards building risk or diagnostic models. Less attention has been devoted to using
+Clinical machine learning projects have made a major push towards building risk or diagnostic models. Less attention has been devoted to using
 learning to suggest treatments or interventions. I think it's worth testing to waters to see if this can be done responsibly. DML presents one path forward. 
 I had mentioned previously that DML assumes a particular causal structure in your data. We can illustrate that struvture like this:
 
@@ -15,11 +17,11 @@ IMAGE OF GRAPH
 
 Here, Y is some clinical outcome of interest (risk of disease, probability of diagnosis, etc.). T is some treatment or intervention. X is all the
  demographic, medical features of the patients. This diagram is illustrating that the treatment will influence the risk of disease, and that features of the
- patient will influence both the risk and which/whether treatments will be given. Broadly, the goal is to estimate the size of the arrow connecting T and Y
+ patient will influence both the risk and which/whether treatments will be given. Broadly, the goal is to estimate the magnitude of the arrow connecting T and Y
   (referred to now as the treatment effect). Specifically, we want that estimation to:
  1.) be accurate with a lot of data (might seem obvious, but this is harder than it sounds)
  2.) come with confidence intervals
- 3.) not make strict assumptions about the form of the data (leverage machine learning)
+ 3.) not make strict assumptions about the form of the data (a.k.a., able to leverage machine learning)
 
 * DML solution
 These points have historically been hard to acheive because methods for 'good' causal estimates typically do not give us point 3, and methods of machine
@@ -31,22 +33,22 @@ These points have historically been hard to acheive because methods for 'good' c
 DML can remove those two sources of bias and give us an estimate of the treatment effect and all of the extra points outlined above. At a high level, 
 these biases are alleviated by fitting two separate machine learning models (thus the name) to estimate the effect of X on Y and T, and then solving for
 theta using the residuals of those estimates (more details on this below). Additionally, there are now some pretty good packages implementing DML 
-in python that play nicely with scikit learn. All together making it a desireable new method for applied scientists, and motivating me to give it a try. 
+in python that play nicely with scikit learn. All together making it a desireable new method for applied scientists, and motivated me to give it a try. 
 
 * caveats and alternatives
 Like all methods, DML comes with important assumptions and caveats. 
 Assumptions (most of these are true of many causal methods):
-1.)
-2.)
-3.) You are recording all variables that influence Y and T in X. I think this is the most fraught assumption in medical contexts (REF).
+1.) Consistency - An individual's potential outcome under thier observed exposure history is precisely their observed outcome.
+2.)Positivity - Everyone in the study has some probability of receiving treatment
+3.) Echangability - You are recording all variables that influence Y and T in X. I think this is the most fraught assumption in medical contexts (REF).
 
 Caveats:
-1.) categorical treatment
-2.) biased data classes
+1.) categorical treatment - at the moment, there isn't a way to use DML for a categorical treatment variable that also provides confidence intervals. Other methods, such as doubly robust learning, might be better suited here.
+2.) biased data classes - DML is known to be biased in cases where one outcome is extremely rare (though it is less biased than many other methods). Over/undersampling of the data might be helpful in these cases.
 
 Alternatives
-1.) Doubly robust learning
-2.) TLME
+1.) Doubly robust learning ()
+2.) TLME ()
 
 ### How DML allows causal inference and machine learning to mix 
 We're now going to describe the method in more detail than the above summary. The goal here is to hit the major points of the DML paper (REF) restructured
@@ -72,47 +74,49 @@ This equation is essentially formalizing the graph we had displayed earlier.
 
 GRAPH IMAGE
 
-These equations are a useful example because they give us a specific functional form for how T affects Y (T times theta). Since this relationship is linear,
+These equations are a useful example because they give us a specific functional form for how T affects Y (T * theta). Since this relationship is linear,
 it makes some of the math a little bit nicer. In the end, we want DML to work for more than just this specific situation, but this definition is useful for now. 
-If we were to code up these relationships in python, it would look something like this
+If we were to code up these relationships in python, it would look something like this. Note that to code this up we have to pick a specific g_0(X) and m_0(X). It could be whatever you want, but here we're using some exponential sums of the first few columns of X (I picked this because that's what the original paper does).
 
 DGP CODE
 
-Let's imaging you haven't read this blog post and you given some X,T, and Y data. You're told that there is definitely a linear relationship between T and
-Y. You're then asked to estimate what that relationship is exactly. They tell you they know the answer, but want to see if you can find it on your own. 
-If you're like me, your first instinct might be to estimate theta exactly. Specifically, you could use your machine learning model of choice 
-(for me, random forest) to estimate Y from X, then regress out the effect of T. 
-
-Mathematically, you can do this by moving some terms around to isolate theta
+Let's imaging you haven't read this blog post and you given some X,T, and Y data, as well as the data generating equations above. You're then asked to estimate what theta is. They tell you they know the answer, but want to see if you can find it on your own. 
+If you're like me, your first instinct might be to move some terma around in the equation to isolate theta, and then try to estimate all the missing variables with machine learning.  
 
 EQUATION
 
-In code, the direct method would look like this.
+This is a little tricky because g0(X) is not the influence of X on Y, its the influence of X on the part of Y that isnt influenced by T. Therefore we have to do this iteratively
+1. Get an initiail estimate of theta by solving an intermediate machine problem (l0(X)) that predicts Y from X.
+2. Subtract T from that initial estimate to fit g0
+3. Regress T from g0 to get theta.
+
+And we're done! In code, the direct method would look like this.
 
 DM CODE
 
-Now we can see how well we did! If our estimate is good, we would expect the normalized difference between our estimate of theta, and the real theta to
+Note that you could use whatever machine model you want, it doesn't have to be a randome forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data). Now we can see how well we did! If our estimate is good, we would expect the normalized difference between our estimate of theta, and the real theta to
  be centered on 0.
  
 HISTOGRAM IMAGE
 
-This histogram shows that is not the case. Our estimate is centered on a slightly positive value. What went wrong?
+This histogram shows that is not the case. Our estimate is way off, centered on a positive value. What went wrong?
 
 At a high level, what went wrong is that we did not explicitly model the effect of X on T. That influence is biasing our estimate in a few ways. 
 Illustrating this explicitly is where our partially linear data generating process comes in handy. We can write out an equation for the error in our estimate.
- As a reminder, the goal here would be for this term to converge to 0 as we get more data.
+ As a reminder, the goal here would be for the left hand side to converge to 0 as we get more data.
 
 ERROR EQUATION
 
 * LHS
 * Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0
-* This term is where the problem is. Our estimate error is never going to be 0, and won;t quite be cenmtered on 0. This because of the deal we make as 
+* This term is where the problem is. Our estimate error is never going to be 0, and won't quite be centered on 0. This because of the deal we make as 
   data scientists working with complex data. Reduce the varaince (overfitting) of our machine learning model, we induce some bias in our estimate (often through 
   regularization). Additionally, T depends on X, and therefore also will not converge to 0. Because of this, g-g_hat times T will be small, but not zero. 
   It will be divided by a large number, and will converge to 0 eventually, but too slowly to be practical. 
 
-We have to remove theeffect of X on T to circumvent this bias. We can do this in three steps:
-1.) Estimate T from X using ML model of choice (different from the direct method!)
+We have to remove the effect of X on T to circumvent this bias. We can do this in three steps:
+1.) Get initial theta estimate using l0(X)
+2.) Estimate T from X using ML model of choice (different from the direct method!)
 2.) Estimate Y from X using ML model of choice
 3.) Regress the residuals of each model onto eachother to get theta
 
@@ -124,6 +128,12 @@ NEW ERROR EQ
 * Still goes to 0
 * Now we have two small, non-0 numbers multiplied by eachother, divided by a large number. This will converge to 0 much more quickly than before
 * ... this method adds a new term that we're going to ignore for now. But it comes back later!
+
+In code, this new process looks like this:
+
+NEW CODE
+
+And we have greatly reduced our bias!
 
 For this specific data generating process, we now have a way of estimating theta without regularization bias! However I mentioned earlier that we want to be 
 able to estimate more than only this process. In particular, step three involves linear regression, and only works in our partially linear example. How do
@@ -170,10 +180,10 @@ But first, it's time to revisit out error equation in the partially linear case.
 NEW ERROR WITH ALL TERMS
 
 We've discussed the first terms perviously, but I'm revealing the last term we had hidden previously.
-* If any overfitting is present in g_hat, the estimate will pick up some noise from the noise term. This will slow down the convergence of this new term to 0
+* If any overfitting is present in g_hat, the estimate will pick up some noise from the noise term. This will slow down the convergence of this new term to 0. This is also why the last histogram still wasn't centered on 0, even if it was closer.
 
 The solution to this bias is to fit g and m on a different set of data than the set used to estimate theta. Similar to how cross-validation avoids overfitting 
-during parameter selection, this method (called cross-fitting) avoids overfitting in out estimation of theta. This changes our DML steps slightly.
+during parameter selection, this method (called cross-fitting) avoids overfitting in our estimation of theta. This changes our DML steps slightly.
 
 1.) Split the data into K folds. For each fold:
 2.) Estimate T from X using ML model of choice and fold K
@@ -181,18 +191,22 @@ during parameter selection, this method (called cross-fitting) avoids overfittin
 4.) Solve moment equation get theta using other sets of data
 5.) Select theta estimate that gives the best solution over all splits.
 
-This is the DML method! Now I'll show you how to apply it.
+This is the DML method! What happens if we code this up in our partially linear example:
+
+DML CODE
+
+Looks great! Our error is now centered on 0. Now that we've shown how DML avoids two sources of bias in causal estimation, I'll show you how to apply it.
  
 ### Code example
-We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, it will be usefull to check in with the steps listed above. For simplicity, we're going to use the same data generating process we discuessed above
+We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, it will be usefull to check in with the 5 steps listed above (but you can skip the rest). For simplicity, we're going to use a similar data generating process to the one we discuessed earlier. The key difference here, is that theta is a function of X, not a scalar. In many medical situations, we expect the benefit a patient recevies to vary depending on individual characteristics. For example, taller people might need higher doses of anesthetics. When theta is dependent on individual characteristics, it is called a heterogeneous treatment effect, or a conditonal average treatment effect. That is what we're estimating here.
 
 DATA GENERATING PROCESS
 
-As a reminder, X are our patient features, Y is a binary predictor of outcome or risk, and T is a binary indicator of treatment. Theta is the treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
+As a reminder, X are our patient features, Y is a binary predictor of outcome or risk, and T is a continuous indicator of treatment (maybe a dosage). Theta is the treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. This is how we can simulate this data:
 
 SIMULATING DATA CODE
 
-We're also going to split our data into folds for evaluation. It's important to remember that each training fold is going to be further split within the DML estimator, so we want to make sure there are enough observations in the fold to split further.
+We're also going to split our data into folds for evaluation. It's important to remember that each training fold is going to be further split within the DML estimator for cross-fitting, so we want to make sure there are enough observations in the fold to split further.
 
 DATA SPLITTING CODE
 
@@ -210,7 +224,7 @@ SINGE CAUSAL FOREST ESTIMATOR
 
 This function takes care of the cross-fitting procedure! The argument XX defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
 
-Also similar to RandomForestCLassifiers in scikit learn, the CausalForest estimator has many other parameters. If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weightnig option (XXX). This is because the causal forest method makes use of a specific weighting strategy already (REF). 
+Also similar to RandomForestClassifiers in scikit learn, the CausalForest estimator has many other parameters. If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weightnig option (XXX). This is because the causal forest method makes use of a specific weighting strategy already (REF). 
 
 Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearns Grid or RandomSearchCV functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one. For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run
 
@@ -238,8 +252,10 @@ We did pretty well! As expected, given the simulated data. This concludes the ex
 * blogs (liking old twitter posts)
 * talk slides
 * econML tutorials
+* DoubleML github (if you want to recreate the paper figures exactly -- which is not what was done here -- you should use the parameters and random seeds from here)
 
 ### References
 * causal inferences issue
 * DML paper
 * Generalized random forest estimator
+* Causal forest estimator
