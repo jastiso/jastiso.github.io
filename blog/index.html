@@ -195,7 +195,7 @@
         plt.show()
         </code>></pre>
          
-         <div class="fakeimg">Image of histogram</div>
+         <img src="dml/nocf_noorth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on 25, ranging from about 20 to 30"></img>
         
          Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data). Now we can see how well we did! If our estimate is good, we would expect the normalized difference between our estimate of theta, and the real theta to
          be centered on 0.
@@ -288,6 +288,8 @@
         plt.plot([0,0], [0,y_max], 'r')
         plt.show()   
         </code>></pre>
+        
+         <img src="dml/nocf_orth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on -8, ranging from about -12 to -4"></img>
 
         And we have greatly reduced our bias!
 
@@ -418,7 +420,7 @@
 
         Using this process, we can correct the bias in our stimateion
 
-        <div class="fakeimg">Image of graph</div>
+        <img src="dml/cf_orth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on 0.05, ranging from about -0.3 to 0.4"></img>
         
         This is the DML method! Now I'll show you how to apply it.
          
