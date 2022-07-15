@@ -12,13 +12,14 @@
     <div class="card">
       <h2>Double/debiased machine learning</h2>
       <h5>Light- to medium-math exaplaination of the method with tutorials, June 10, 2021</h5>
-      <div class="fakeimg" style="height:200px;">Image</div>
+      <img src="dml/dallerhinos.png" class="fakeimg" style="height:200px;" alt="Image of two rhinos, each with thie rown laptop, in the style of Henri Rausseau (curtosy of DALLE mini)"></img>
       <p>
 
         <h3>What is double machine learning</h3>
         Double machine learning is actually a way to esetimate causal effects in large, complex data that have a specific causal structure. Previously many causal 
         modeling methods relied on assuming a specific form of the data rather than learning it, and didn't allow with data with (DEFINITION OF COMPLEXITY), making them less useful in
-         many modern data settings. DML allows these two to coexist, which is the source of much of the hype in economics. 
+         many modern data settings. DML allows these two to coexist, which is the source of much of the hype in economics. When I was trying to learn more about the method, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there had a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations. This is the info I wish I had when I was learning. 
+
         
         <h4>the problem</h4>
         Similarly, clinical machine learning projects have made a major push towards building risk or diagnostic models. Less attention has been devoted to using
@@ -56,20 +57,20 @@
         Like all methods, DML comes with important assumptions and caveats. 
         Assumptions (most of these are true of many causal methods):
         <ol>
-            <li></li>
-            <li></li>
+            <li>Consistency - An individual's potential outcome under thier observed exposure history is precisely their observed outcome.</li>
+            <li>Positivity - Everyone in the study has some probability of receiving treatment</li>
             <li>You are recording all variables that influence Y and T in X. I think this is the most fraught assumption in medical contexts (REF).</li>
         </ol>
 
         Caveats:
         <ol>
-            <li>categorical treatment</li>
-            <li> biased data classes</li>
+            <li> categorical treatment - at the moment, there isn't a way to use DML for a categorical treatment variable that also provides confidence intervals. Other methods, such as doubly robust learning, might be better suited here.</li>
+            <li> biased data classes - DML is known to be biased in cases where one outcome is extremely rare (though it is less biased than many other methods). Over/undersampling of the data might be helpful in these cases.</li>
         </ol>
         
         Alternatives
         <ol>
-            <li> doubly robust learning</li>
+            <li>Doubly robust learning</li>
             <li>TLME</li>
         </ol>
         
@@ -77,6 +78,7 @@
         We're now going to describe the method in more detail than the above summary. The goal here is to hit the major points of the DML paper (REF) restructured
         for a more applied audience. I found these points difficult to work through on my own (thus the blog post). However if you're satisfied with the above description,
         skip to the code example.
+
         
         <h4>direct method</h4>
         To formalize the problems and solutions discussed above, we're going to have to be more mathematically precise with our definitions. We're going to start by
@@ -100,35 +102,109 @@
         
         <div class="fakeimg">Image of graph</div>
         
-        These equations are a useful example because they give us a specific functional form for how T affects Y (T times theta). Since this relationship is linear,
+        These equations are a useful example because they give us a specific functional form for how T affects Y (T * theta). Since this relationship is linear,
         it makes some of the math a little bit nicer. In the end, we want DML to work for more than just this specific situation, but this definition is useful for now. 
-        If we were to code up these relationships in python, it would look something like this
+        If we were to code up these relationships in python, it would look something like this. Note that to code this up we have to pick a specific g_0(X) and m_0(X). It could be whatever you want, but here we're using some exponential sums of the first few columns of X (I picked this because that's what the original paper does).
         
-        <pre><code class="python"> DGP code </code>></pre>
+        <pre><code class="python"> 
+        from scipy.linalg import toeplitz
+        # pick any value for theta_0
+        theta = -0.4
+
+        # define a function for generating data
+        def get_data(n, n_x):
+        """
+        Inputs:
+        n       the number of observations to simulate
+        n_x     the number of columns of X to simulate
+        """
+            cov_mat = toeplitz([np.power(0.7, k) for k in range(n_x)])
+            x = np.random.multivariate_normal(np.zeros(n_x), cov_mat, size=[n, ])
         
-        Let's imaging you haven't read this blog post and you given some X,T, and Y data. You're told that there is definitely a linear relationship between T and
-        Y. You're then asked to estimate what that relationship is exactly. They tell you they know the answer, but want to see if you can find it on your own. 
-        If you're like me, your first instinct might be to estimate theta exactly. Specifically, you could use your machine learning model of choice 
-        (for me, random forest) to estimate Y from X, then regress out the effect of T. 
+            u = np.random.standard_normal(size=[n, ])
+            v = np.random.standard_normal(size=[n, ])
+            m0 = x[:, 0] + np.divide(np.exp(x[:, 2]), 1 + np.exp(x[:, 2]))
+            t = m0 + u
+            g0 =  np.divide(np.exp(x[:, 0]), 1 + np.exp(x[:, 0])) + x[:, 2]
+            y = theta * t + g0 + v
+            
+            return x, y, t        
+        </code>></pre>
         
-        Mathematically, you can do this by moving some terms around to isolate theta
+        Let's imaging you haven't read this blog post and you given some X,T, and Y data, as well as the data generating equations above. You're then asked to estimate what theta is. They tell you they know the answer, but want to see if you can find it on your own. 
+        If you're like me, your first instinct might be to move some terma around in the equation to isolate theta, and then try to estimate all the missing variables with machine learning.  
         
         $$ EQUATION $$
         
+        This is a little tricky because g0(X) is not the influence of X on Y, its the influence of X on the part of Y that isnt influenced by T. Therefore we have to do this iteratively
+        <ol>
+            <li>Get an initiail estimate of theta by solving an intermediate machine problem (l0(X)) that predicts Y from X.</li>
+            <li>Subtract T from that initial estimate to fit g0</li> 
+            <li>Regress T from g0 to get theta.</li>
+        </ol>
+         
         In code, the direct method would look like this.
+
+        <pre><code class="python"> 
+        import numpy as np
+        from sklearn.ensemble import RandomForestRegressor
+        import matplotlib.pyplot as plt
+
+        # initializa structure for theta_0- - theta
+        errors = []
+        for i in range(n_sim):
+            # get data
+            x, y, t = get_data(n, n_x)
+            
+            # this will be our model for predicting Y from X
+            ml_l = RandomForestRegressor()
+            # this will be our model for predicting Y - T*theta from X
+            ml_g = RandomForestRegressor()
         
-        <pre><code class="python"> DM code </code>></pre>
-        
-        Now we can see how well we did! If our estimate is good, we would expect the normalized difference between our estimate of theta, and the real theta to
-         be centered on 0.
+            ml_l.fit(x,y)
+            l_hat = ml_l.predict(x)
+            
+            # initial guess for theta
+            u_hat = y - l_hat
+            psi_a = -np.multiply(t, t)
+            psi_b = np.multiply(t, u_hat)
+            theta_init = -np.mean(psi_b) / np.mean(psi_a)
+            
+            # get estimate for g0
+            ml_g.fit(x, y - t*theta_init)
+            g_hat = ml_g.predict(x)
+            
+            # compute residuals
+            u_hat = y - g_hat
+            psi_a = -np.multiply(t, t)
+            psi_b = np.multiply(t, u_hat)
+            
+            # get estimate and SE
+            theta_hat = -np.mean(psi_b) / np.mean(psi_a)
+            psi = psi_a * theta_hat + psi_b
+            err = theta_hat - theta
+            J = np.mean(psi_a)
+            sigma2_hat = 1 / len(y) * np.mean(np.power(psi, 2)) / np.power(J, 2)
+            err = err/np.sqrt(sigma2_hat)
+            errors.append(err)
+            
+        plt.figure()
+        plt.hist(errors)
+        _, y_max = plt.ylim()
+        plt.plot([0,0], [0,y_max], 'r')
+        plt.show()
+        </code>></pre>
          
          <div class="fakeimg">Image of histogram</div>
         
-        This histogram shows that is not the case. Our estimate is centered on a slightly positive value. What went wrong?
+         Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data). Now we can see how well we did! If our estimate is good, we would expect the normalized difference between our estimate of theta, and the real theta to
+         be centered on 0.
+
+        This histogram shows that is not the case. Our estimate is way off and centered on a positive value. What went wrong?
         
         At a high level, what went wrong is that we did not explicitly model the effect of X on T. That influence is biasing our estimate in a few ways. 
         Illustrating this explicitly is where our partially linear data generating process comes in handy. We can write out an equation for the error in our estimate.
-         As a reminder, the goal here would be for this term to converge to 0 as we get more data.
+        As a reminder, the goal here would be for the left hand side to converge to 0 as we get more data.
 
          <h4>regularization bias</h4>
         
@@ -143,7 +219,7 @@
                 It will be divided by a large number, and will converge to 0 eventually, but too slowly to be practical. </li>
         </ul>
         
-        We have to remove theeffect of X on T to circumvent this bias. We can do this in three steps:
+        We have to remove the effect of X on T to circumvent this bias. We can do this in three steps:
         <ol>
             <li>Estimate T from X using ML model of choice (different from the direct method!)</li>
             <li> Estimate Y from X using ML model of choice</li>
@@ -161,6 +237,60 @@
             <li> ... this method adds a new term that we're going to ignore for now. But it comes back later!</li>
         </ul>
         
+        In code, this new process looks like this:
+        <pre><code class="python"> 
+        
+        errors = []
+        for i in range(n_sim):
+            # get data
+            x, y, t = get_data(n, n_x)
+            
+            # model for predicting Y from X
+            ml_l = RandomForestRegressor()
+            # model for predicting T from X - new to the regularized version!
+            ml_m = RandomForestRegressor()
+            # model for predicting Y - T|X*theta from X
+            ml_g = RandomForestRegressor()
+        
+            ml_l.fit(x,y)
+            ml_m.fit(x,t)
+            l_hat = ml_l.predict(x)
+            m_hat = ml_m.predict(x)
+            
+            # initial guess for theta
+            u_hat = y - 
+            # this is the part that's different
+            v_hat = t - m_hat
+            psi_a = -np.multiply(v_hat, v_hat)
+            psi_b = np.multiply(v_hat, u_hat)
+            theta_init = -np.mean(psi_b) / np.mean(psi_a)
+            
+            # get estimate for G
+            ml_g.fit(x, y - t*theta_init)
+            g_hat = ml_g.predict(x)
+            
+            # compute residuals
+            u_hat = y - g_hat
+            psi_a = -np.multiply(v_hat, v_hat)
+            psi_b = np.multiply(v_hat, u_hat)
+            
+            theta_hat = -np.mean(psi_b) / np.mean(psi_a)
+            psi = psi_a * theta_hat + psi_b
+            err = theta_hat - theta
+            J = np.mean(psi_a)
+            sigma2_hat = 1 / len(y) * np.mean(np.power(psi, 2)) / np.power(J, 2)
+            err = err/np.sqrt(sigma2_hat)
+            errors.append(err)
+            
+        plt.figure()
+        plt.hist(errors)
+        _, y_max = plt.ylim()
+        plt.plot([0,0], [0,y_max], 'r')
+        plt.show()   
+        </code>></pre>
+
+        And we have greatly reduced our bias!
+
         For this specific data generating process, we now have a way of estimating theta without regularization bias! However I mentioned earlier that we want to be 
         able to estimate more than only this process. In particular, step three involves linear regression, and only works in our partially linear example. How do
          we generalize the method of estimating theta?
@@ -223,6 +353,68 @@
             <li> Solve moment equation get theta using other sets of data</li>
             <li>Select theta estimate that gives the best solution over all splits.</li>
         </ol>
+
+        In code, all this does is add a loop over folds:
+
+        <pre><code class="python">
+        from sklearn.model_selection import KFold
+        # number of splits for cross fitting
+        nSplit = 2
+        errors = []
+        for i in range(n_sim):
+            # get data
+            x, y, t = get_data(n, n_x)
+            # cross fit
+            kf = KFold(n_splits=nSplit)
+            # save theta hats, and some variables for getting variation in theta_hat
+            theta_hats = []
+            sigmas = []
+            for train_index, test_index in kf.split(x):
+                x_train, x_test = x[train_index], x[test_index]
+                y_train, y_test = y[train_index], y[test_index]
+                t_train, t_test = t[train_index], t[test_index]
+                
+                ml_l = RandomForestRegressor()
+                ml_m = RandomForestRegressor()
+                ml_g = RandomForestRegressor()
+        
+                ml_l.fit(x_train,y_train)
+                ml_m.fit(x_train,t_train)
+                l_hat = ml_l.predict(x_test)
+                m_hat = ml_m.predict(x_test)
+                
+                # initial guess for theta
+                u_hat = y_test - l_hat
+                v_hat = t_test - m_hat
+                psi_a = -np.multiply(v_hat, v_hat)
+                psi_b = np.multiply(v_hat, u_hat)
+                theta_init = -np.mean(psi_b) / np.mean(psi_a)
+        
+                # get estimate for G
+                ml_g.fit(x_train, y_train - t_train*theta_init)
+                g_hat = ml_g.predict(x_test)
+        
+                # compute residuals
+                u_hat = y_test - g_hat
+        
+                psi_a = -np.multiply(v_hat, v_hat)
+                psi_b = np.multiply(v_hat, u_hat)
+        
+                theta_hat = -np.mean(psi_b) / np.mean(psi_a)
+                theta_hats.append(theta_hat)
+                psi = psi_a * theta_hat + psi_b
+                sigma2_hat = 1 / len(y_test) * np.mean(np.power(psi, 2)) / np.power(J, 2)
+                sigmas.append(sigma2_hat)
+            err = np.mean(theta_hat) - theta
+            err = err/np.sqrt(np.mean(sigma2_hat))
+            errors.append(err)
+            
+        plt.figure()
+        plt.hist(errors)
+        _, y_max = plt.ylim()
+        plt.plot([0,0], [0,y_max], 'r')
+        plt.show()
+        </code></pre>
 
         Using this process, we can correct the bias in our stimateion
 
