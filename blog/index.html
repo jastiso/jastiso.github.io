@@ -89,22 +89,22 @@
         
         Let's walk through the terms:
         <ul>
-            <li>X the features</li>
-            <li> Y the outcome</li>
-            <li> T the treatment (it can be binary, continuous, or categorical)</li>
-            <li> g(x) some mappong of x to y</li>
-            <li> m(x) some mapping of x to t</li>
-            <li> theta - the treatment effect. Here its a scalar, for simplicity, but this doesn't have to be the case</li>
-            <li> the noise, which cancels out on average</li>
+            <li> $$X$$ the features</li>
+            <li> $$Y$$ the outcome</li>
+            <li> $$T$$ the treatment (it can be binary, continuous, or categorical)</li>
+            <li> $$g_0(x)$$ some mappong of x to y, excluding the effect of T and $$\theta_0$$</li>
+            <li> $$m_0(x)$$ some mapping of x to t</li>
+            <li> $$\theta$$ - the treatment effect. Here its a scalar, for simplicity, but this doesn't have to be the case</li>
+            <li> $$U, V$$ the noise, which cancels out on average</li>
         </ul>
         
         This equation is essentially formalizing the graph we had displayed earlier.
         
         <img src="dml/causal_diag.png" class="fakeimg" style="height:200px;" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
         
-        These equations are a useful example because they give us a specific functional form for how T affects Y (T * theta). Since this relationship is linear,
+        These equations are a useful example because they give us a specific functional form for how $$T$$ affects $$Y$$ ($$T \times \theta_0$$). Since this relationship is linear,
         it makes some of the math a little bit nicer. In the end, we want DML to work for more than just this specific situation, but this definition is useful for now. 
-        If we were to code up these relationships in python, it would look something like this. Note that to code this up we have to pick a specific g_0(X) and m_0(X). It could be whatever you want, but here we're using some exponential sums of the first few columns of X (I picked this because that's what the original paper does).
+        If we were to code up these relationships in python, it would look something like this. Note that to code this up we have to pick a specific $$g_0(X)$$ and $$m_0(X)$$. It could be whatever you want, but here we're using some exponential sums of the first few columns of X (I picked this because that's what the original paper does).
         
         <pre><code class="python"> 
         from scipy.linalg import toeplitz
@@ -131,13 +131,13 @@
             return x, y, t        
         </code>></pre>
         
-        Let's imaging you haven't read this blog post and you given some X,T, and Y data, as well as the data generating equations above. You're then asked to estimate what theta is. They tell you they know the answer, but want to see if you can find it on your own. 
-        If you're like me, your first instinct might be to build one machine learning model of $$ T\theta_{0} + g_{0}(X) $$ and regress out $$T$$ to solve for $$\theta_0$$.  
+        Let's imagine you're given some X, T, and Y data by your emploter, as well as the data generating equations above. You're then asked to estimate what theta is. 
+        One first attempt might be to build one machine learning model of $$ T\theta_{0} + g_{0}(X) $$ and $$g_0(X)$$, then regress out $$T$$ to solve for $$\theta_0$$.  
         
-        This is a little tricky because g0(X) is not the influence of X on Y, its the influence of X on the part of Y that isnt influenced by T. Therefore we have to do this iteratively
+        This is a little tricky because $$g_0(X)$$ is not the influence of $$X$$ on $$Y$$, its the influence of $$X$$ on the part of $$Y$$ that isnt influenced by $$T \times \theta_0$$. Therefore we have to do this iteratively: get an initial guess for $$\theta_0$$ in order to estimate $$g_0(X)$$; then use that estimate of g_0(X) to solve for $$\theta_0$$.
         In code, the direct method would look like this:
         
-        First, we'd simulate our data, build our machine learning estimate of $$Y$$ from $$ T\theta_{0} + g_{0}(X) $$ (we'll call this model $$l_0(X)$$)
+        First, we'd simulate our data, and build our machine learning estimate of $$Y$$ from $$ T\theta_{0} + g_{0}(X) $$ (we'll call this model $$l_0(X)$$)
         <pre><code class="python"> 
         from sklearn.ensemble import RandomForestRegressor
     
@@ -149,7 +149,7 @@
         ml_l.fit(x,y)
         </code>></pre>
         
-        Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data). Next we can take an initial guess for theta, and then fit our estimate of $$g_0(X)$$
+        Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data generating function). Next we can take an initial guess for $$\theta_0$$, and then fit our estimate of $$g_0(X)$$
         <pre><code class="python"> 
          # this will be our model for predicting Y - T*theta from X, or g0_hat
          ml_g = RandomForestRegressor()
@@ -185,23 +185,23 @@
          
          <img src="dml/nocf_noorth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on 25, ranging from about 20 to 30"></img>
         
-         If our estimate is good, we would expect the normalized difference between our estimate of theta, and the real theta to
+         If our estimate is good, we would expect the normalized difference between our estimate of $$\theta$$ and the real theta to
          be centered on 0.
 
         This histogram shows that is not the case. Our estimate is way off and centered on a positive value. What went wrong?
         
-        At a high level, what went wrong is that we did not explicitly model the effect of X on T. That influence is biasing our estimate in a few ways. 
+        At a high level, part of what went wrong is that we did not explicitly model the effect of X on T. That influence is biasing our estimate. 
         Illustrating this explicitly is where our partially linear data generating process comes in handy. We can write out an equation for the error in our estimate.
         As a reminder, the goal here would be for the left hand side to converge to 0 as we get more data.
 
          <h4>regularization bias</h4>
         
-        $$ \sqrt{n}(\hat{\theta_0} - \theta_0) = (\frac{1}{n}\sum_{i\in I}^nT_{i}^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nT_{i}U_{i} + (\frac{1}{n}\sum_{i\in I}^nT_{i}^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nT_{i}(g_0(X_i) - \hat{g_0}(X_i))$$
+        $$ \sqrt{n}(\hat{\theta_0} - \theta_0) = $$ <span style="color:#023743">$$ (\frac{1}{n}\sum_{i\in I}^nT_{i}^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nT_{i}U_{i} $$</span> $$+$$ <span style="color:#021743">$$ (\frac{1}{n}\sum_{i\in I}^nT_{i}^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nT_{i}(g_0(X_i) - \hat{g_0}(X_i))$$</span>
         
         <ul>
-            <li>LHS</li>
-            <li>Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0</li>
-            <li>This term is where the problem is. Our estimate error is never going to be 0, and won;t quite be cenmtered on 0. This because of the deal we make as 
+            <li>The left hand side is our scaled error term - what we want to go to 0</li>
+            <li style="color:#023743">Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0</li>
+            <li style="color:#021743">This term is where the problem is. Our estimate error is never going to be 0, and won;t quite be cenmtered on 0. This because of the deal we make as 
                 data scientists working with complex data. Reduce the varaince (overfitting) of our machine learning model, we induce some bias in our estimate (often through 
                 regularization). Additionally, T depends on X, and therefore also will not converge to 0. Because of this, g-g_hat times T will be small, but not zero. 
                 It will be divided by a large number, and will converge to 0 eventually, but too slowly to be practical. </li>
@@ -209,17 +209,17 @@
         
         We have to remove the effect of X on T to circumvent this bias. We can do this in three steps:
         <ol>
-            <li>Estimate T from X using ML model of choice (different from the direct method!)</li>
-            <li> Estimate Y from X using ML model of choice</li>
-            <li> Regress the residuals of each model onto eachother to get theta</li>
+            <li>Estimate $$T$$ from $$X$$ using ML model of choice (different from the direct method!)</li>
+            <li> Estimate $$Y$$ from $$X$$ using ML model of choice</li>
+            <li> Regress the residuals of each model onto eachother to get $$\theta_0$$</li>
         </ol>
 
         We can write out a new error equation like so:
         
-        $$ { \sqrt{n}(\hat{\theta_0} - \theta_0) = (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i + (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i)) + ... } $$
+        $$ { \sqrt{n}(\hat{\theta_0} - \theta_0) = $$<span style="color:#023743">$$(EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i$$</span> $$+$$ <span style="color:#021743">$$(EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i))$$</span> + ... } $$
        
         <ul>
-            <li>LHS</li>
+            <li>The left hand side is the same as before</li>
             <li>Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0</li>
             <li>Now we have two small, non-0 numbers multiplied by eachother, divided by a large number. This will converge to 0 much more quickly than before </li>
             <li> ... this method adds a new term that we're going to ignore for now. But it comes back later!</li>
@@ -250,6 +250,7 @@
         <pre><code class="python">    
          # compute residuals
          u_hat = y - g_hat
+         # v_hat is the residuals from our m0 model
          psi_a = -np.multiply(v_hat, v_hat)
          psi_b = np.multiply(v_hat, u_hat)
             
@@ -279,11 +280,11 @@
          This equation looks vary different but contains a lot of the same players as before:
 
          <ol>
-             <li>W is the data (X,Y, and T)</li>
-             <li>Theta is the true treatment effect</li>
-             <li> psi is just some cost function. We are purposely not defining it because we want this to be a general solution, but you can think of it as any kind of 
+             <li> $$W$$ is the data (X,Y, and T)</li>
+             <li> $$\theta$$ is the true treatment effect</li>
+             <li> $$\psi$$ is just some cost function. We are purposely not defining it because we want this to be a general solution, but you can think of it as any kind of 
                 error minimization function</li>
-             <li> eta is called the nuissance parameter, and here contains g and m</li>
+             <li> $$\eta$$ is called the nuissance parameter, and here contains g and m</li>
          </ol>
 
          Solving minimization problems like these are often difficult and subject to noise. To assure we find a robust solution, we're going to add one other condition
@@ -297,13 +298,13 @@
          
          There are whole branches of mathematics dedidated to solving these tpyes of equations with moment conditions, and there is no single good solution. All the 
          different solutions are called 'DML estimators'. Rather than getting into any specific estimator here, we're just going to trust that they exist, and move on.
-         We'll talk a little bit about a specific estimator in the code section.
+         We'll talk a little bit about a specific estimator in the example code section.
          
          We now have a more generalizable set of steps
          <ol>
-             <li> Estimate T from X</li>
-             <li> Estimate Y from X</li>
-             <li> Solve moment equation to get theta</li>
+             <li> Estimate $$T$$ from $$X$$</li>
+             <li> Estimate $$Y$$ from $$X$$</li>
+             <li> Solve moment equation to get $$\theta$$</li>
          </ol>
         
          <h4>overfitting bias</h4>
@@ -317,17 +318,17 @@
         $$ { \sqrt{n}(\hat{\theta_0} - \theta_0) = (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i + (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i)) + \frac{1}{\sqrt{n}}\sum_{i \in I}^{n}V_i(\hat{g_0}(X_i) - g_0(X_i)) } $$
         
         We've discussed the first terms perviously, but I'm revealing the last term we had hidden previously.
-        * If any overfitting is present in g_hat, the estimate will pick up some noise from the noise term. This will slow down the convergence of this new term to 0
+        * If any overfitting is present in $$\hat{g_0}$$, the estimate will pick up some noise from the noise term. This will slow down the convergence of this new term to 0
         
-        The solution to this bias is to fit g and m on a different set of data than the set used to estimate theta. Similar to how cross-validation avoids overfitting 
-        during parameter selection, this method (called cross-fitting) avoids overfitting in out estimation of theta. This changes our DML steps slightly.
+        The solution to this bias is to fit $$g$$ and $$m$$ on a different set of data than the set used to estimate $$\theta$$. Similar to how cross-validation avoids overfitting 
+        during parameter selection, this method (called cross-fitting) avoids overfitting in out estimation of $$\theta$$. This changes our DML steps slightly.
         
         <ol>
-            <li>Split the data into K folds. For each fold:</li>
-            <li> Estimate T from X using ML model of choice and fold K</li>
-            <li> Estimate Y from X using ML model of choice and fold K</li>
-            <li> Solve moment equation get theta using other sets of data</li>
-            <li>Select theta estimate that gives the best solution over all splits.</li>
+            <li>Split the data into $$K$$ folds. For each fold:</li>
+            <li> Estimate $$T$$ from $$X$$ using ML model of choice and fold $$K$$</li>
+            <li> Estimate $$Y$$ from $$X$$ using ML model of choice and fold $$K$$</li>
+            <li> Solve moment equation get $$\theta$$ using other sets of data</li>
+            <li>Select $$\theta$$ estimate that gives the best solution over all splits.</li>
         </ol>
 
         In code, all this does is add a loop over folds:
@@ -340,7 +341,7 @@
 
         # cross fit
         kf = KFold(n_splits=nSplit)
-        # save theta hats, and some variables for getting variation in theta_hat
+        # save theta hats, and some variables for getting variance in theta_hat
         theta_hats = []
         sigmas = []
             for train_index, test_index in kf.split(x):
@@ -380,21 +381,24 @@
                 sigma2_hat = 1 / len(y_test) * np.mean(np.power(psi, 2)) / np.power(J, 2)
                 sigmas.append(sigma2_hat)
             err = np.mean(theta_hat) - theta
+            err = err/np.sqrt(np.mean(sigmas))
         </code></pre>
 
-        Using this process, we can correct the bias in our stimateion
+        Using this process, we can correct the bias in our estimation
 
         <img src="dml/cf_orth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on 0.05, ranging from about -0.3 to 0.4"></img>
         
-        This is the DML method! Now I'll show you how to apply it.
+        Now we have a pretty good estimate! So far, we've gone over what the DML method is, and how is overcomes biases from regularization and overfitting to get good estimates of $$\theta$$ without making strong assumptions about the form of the data. We didn't go over here, but it is also possible to calculate confidence intervals for these estimates, which are neccessary for applications to clinical contexts. Now I'll show you how to apply it.
          
         <h3>Example, with code</h3>
-        We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, it will be usefull to check in with the steps listed above. For simplicity, we're going to use the same data generating process we discuessed above
+        We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, here's a reminder of the steps of DML. 
+
+        For simplicity, we're going to use a similar data generating process we discuessed above, but with one change. Now, $$\theta$$ is going to be a function of $$X$$. This means that treatment effect will differ for different individuals. This is expected in medical contextx - for example, people with high body mass (X) tend to reach lower enesthetics depths (Y) for the same dose of an anesthetic (T). When $$\theta$$ is a function of $$X$$, it is called a heterogeneous, of conditional average treatment effect (abbreviated CATE in the package nomenclature).
         
-        $$ {Y = T\theta_{0} + g_{0}(X) + U, E[U | X,T] = 0]} $$
+        $$ {Y = T\theta_{0}(X) + g_{0}(X) + U, E[U | X,T] = 0]} $$
         $$ {T = m_{0}(X) + V, E[V | X] = 0} $$
         
-        As a reminder, X are our patient features, Y is a binary predictor of outcome or risk, and T is a binary indicator of treatment. Theta is the treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
+        As a reminder, $$X$$ are our patient features, $$Y$$ is an predictor of outcome or risk, and $$T$$ is an indicator of treatment. While in theory, $$T$$ can be binary, continuous, or categorical, the specific code we are discussing here does not work for categorical treatments. $$\theta_0$$ is the conditional average treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
         
         <pre><code class="python"> simulating data code </code>></pre>
         
@@ -402,9 +406,12 @@
         
         <pre><code class="python"> data splitting code </code>></pre>
         
-        The econML package has different 'estimator' functions that all take data, a Y model, and a T model as input. Therefore, we're going to start with step 2 listed above: estimating T (we'll do the data splitting process later). You can really do this however you want, we're just going to define a simple random forest model here. econML has the benefit of working with GridSearchCV object as well, so we're actually going to define not one speciifc model, but a set models with different parameterizations (if you aren't familiar with GridSearchCV, check out its docs).
+        The econML package has different 'estimator' functions that all take data, a Y model ($$g_0(X)$$), and a T model ($$m_0(X)$$) as input. Therefore, we're going to start with step 2 listed above: estimating $$T$$ (we'll do the data splitting process later). You can really do this however you want, we're just going to define a simple random forest model here. econML has the benefit of working with GridSearchCV object as well, so we're actually going to define not one speciifc model, but a set models with different parameterizations (if you aren't familiar with GridSearchCV, check out its docs).
         
-        <pre><code class="python"> 
+        <pre><code class="python">
+        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.model_selection import GridSearchCV
+        
         # parameters for forest
         params = {
             'max_depth': [5, 10],
@@ -414,18 +421,20 @@
             'n_estimators':[400, 1000]
             }
         
-        t_mdls = GridSearchCV(RandomForestClassifier(),
+        t_mdls = GridSearchCV(RandomForestRegressor(),
                                 params,
                                 cv=nFold,
                                 verbose=1,
                                 scoring='f1_macro')
-        t_mdl = t_mdls.fit(X_train, np.ravel(y_train)).best_estimator_ 
+        t_mdl = t_mdls.fit(X_train, y_train).best_estimator_ 
         </code>></pre>
 
         You can evaluate these models any way you want to. We'll use ROC
         <pre><code class="python"> 
+        from sklearn.metrics import roc_auc_score, roc_curve
+        import matplotlib.pyplot as plt
+        
         plt.figure()
-
         pred = t_mdl.predict_proba(X_test)[:,1]
             
         fpr, tpr, _ = roc_curve(y_test,pred,drop_intermediate=False)
@@ -442,11 +451,13 @@
         plt.legend(loc="best")
         plt.show() 
         </code>></pre>
+        
         <div class="fakeimg">Image of graph</div>
 
-        We can do exactly the same thing for the Y model. Let's use a gradient boosted classifier to mix things up.
+        We can do exactly the same thing for the $$Y$$ model. Let's use a gradient boosted classifier to mix things up.
         
         <pre><code class="python"> 
+        from xgboost import XGBClassifier
         # parameters for XGB
         params = {
             'max_depth': range (2, 10, 1),
@@ -483,17 +494,22 @@
         We can now pick an estimator. econML has 3 main estimators that provide confidence intervals. SparseLinear and Linear estimator will only work if you have many more observations than variables (see this link for comparisons of different estimators). For my data, this was not the case, so left me with 1 option: CausalForest estimator (REF). Like random forest models, this estimator also has the benefit of being able to estimate non-linear treatment effects in a piece-wise fashion.
         
         <pre><code class="python"> 
-        est = CausalForestDML(model_y=y_mdl, model_t=t_mdl, discrete_treatment=True, cv=3)
+        from econml.dml import CausalForestDML
+        
+        est = CausalForestDML(model_y=y_mdl, model_t=t_mdl, discrete_treatment=True, cv=5)
         est.fit(Y=y_train, T=T_train, X=X_train) 
         </code>></pre>
         
-        This function takes care of the cross-fitting procedure! The argument XX defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
+        This function takes care of the cross-fitting procedure! The argument cv defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
         
         Also similar to RandomForestCLassifiers in scikit learn, the CausalForest estimator has many other parameters. If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weightnig option (XXX). This is because the causal forest method makes use of a specific weighting strategy already (REF). 
         
         Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearns Grid or RandomSearchCV functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one. For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run
         
         <pre><code class="python"> 
+        import pandas as pd
+        from sklearn.model_selection import KFold
+        
         # save the scores so we can plot them
         no_score = pd.DataFrame(columns=['depth', 'min_leaf', 'min_split', 'n', 'score'])
         # parameters for causal forest
@@ -509,7 +525,7 @@
         
         Now that we how our cross validation and parameters set up, we can find the best parameters
         
-        <pre><code class="python">
+        <pre><code class="python">        
         # randomly pick some parameters
         n = np.random.choice(est_params['n_estimators'])
         d = np.random.choice(est_params['max_depth'])
@@ -551,7 +567,7 @@
         best_mss = no_score.loc[no_score['score'] == no_score['score'].min(), 'min_split'].values[0]
         best_est = CausalForestDML(model_y=y_mdl,
                                     model_t=t_mdl,
-                                    discrete_treatment=True, verbose=0, cv=3,
+                                    verbose=0, cv=5,
                                     max_depth=best_d,
                                     min_samples_leaf=best_msl,
                                     min_samples_split=best_mss,
@@ -559,12 +575,14 @@
         best_est.fit(np.ravel(y_train), T_train, X=X_train)
         </code>></pre>
         
-        The 'score' function (if you use the default option) tells you the value of the cost function defining Neyman orthogonality. Its essentially telling you how close you were to finding a theta value that minimizes error/maximizes liklihood, and it stable for perturbations to your two machine learning models. Satisfying these two conditions assures an unbiased estimate of theta. While this number is a bit harder to interpret than MSE you might be used to, for the purpose of model or parameter selection it is satisfactory to select the model that gives the lowest score.
+        The 'score' function (if you use the default option) gives you the mean squared error for the last step of the DML algorithm: regressing the residuals of your two machine learning models against eachother. It uses this error as a proxy for error in estimating $$\theta$$.
         
         <pre><code class="python"> 
+        import seaborn as sns
+        
         # print scores for each medicine
-        hp_score['param_set'] = ["_".join(x) for x in hp_score[['n', 'depth', 'min_leaf', 'min_split']].astype(str).values]
-        sns.stripplot(data=hp_score,  y="score", hue="param_set", size=10)
+        no_score['param_set'] = ["_".join(x) for x in hp_score[['n', 'depth', 'min_leaf', 'min_split']].astype(str).values]
+        sns.stripplot(data=no_score,  y="score", hue="param_set", size=10)
         plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
         </code>></pre>
         <div class="fakeimg">Image of graph</div>
@@ -572,7 +590,13 @@
         We can now fit the model using the parameters that gave the lowest score
         
         <pre><code class="python"> 
-        xxx    
+        dml = CausalForestDML(model_y=y_mdl,
+                            model_t=t_mdl,
+                            verbose=0, cv=5,
+                            max_depth=best_d,
+                            min_samples_leaf=best_msl,
+                            min_samples_split=best_mss,
+                            n_estimators=best_n)
         </code>></pre>
         
         We can now look at the distribution for of CATE's for all individuals in the test set.
@@ -588,7 +612,7 @@
         </code>></pre>
         <div class="fakeimg">Image of graph</div>
 
-        We can also look at the CI for a single individual.
+        We can also look at the CI for $$\theta$$ in a single individual.
 
         <pre><code class="python"> 
         # get individual CATES
@@ -608,7 +632,7 @@
         </code>></pre>
         <div class="fakeimg">Image of graph</div>
 
-        How'd we do? Since this is simulated data, we can see how well our estimated treament matches
+        How'd we do? Since this is simulated data, we can see how well our estimated treament matches the true effect
 
         <pre><code class="python"> 
         # plot   
