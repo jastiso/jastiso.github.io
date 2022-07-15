@@ -17,7 +17,7 @@
 
         <h3>What is double machine learning</h3>
         Double machine learning is actually a way to esetimate causal effects in large, complex data that have a specific causal structure. Previously many causal 
-        modeling methods relied on assuming a specific form of the data rather than learning it, and didn't allow with data with (DEFINITION OF COMPLEXITY), making them less useful in
+        modeling methods relied on assuming a specific form of the data rather than learning it, and didn't allow with data where the entropy of the parameter space increases with increasing observations (in otherwords - most large, modern datasets), making them less useful in
          many modern data settings. DML allows these two to coexist, which is the source of much of the hype in economics. When I was trying to learn more about the method, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there had a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations. This is the info I wish I had when I was learning. 
 
         
@@ -26,7 +26,7 @@
         learning to suggest treatments or interventions. I think it's worth testing to waters to see if this can be done responsibly. DML presents one path forward. 
         I had mentioned previously that DML assumes a particular causal structure in your data. We can illustrate that struvture like this:
         
-        <div class="fakeimg">Image of graph</div>
+        <img src="dml/causal_diag.png" class="fakeimg" style="height:200px;" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
         
         Here, Y is some clinical outcome of interest (risk of disease, probability of diagnosis, etc.). T is some treatment or intervention. X is all the
          demographic, medical features of the patients. This diagram is illustrating that the treatment will influence the risk of disease, and that features of the
@@ -43,7 +43,7 @@
         These points have historically been hard to acheive because methods for 'good' causal estimates typically do not give us point 3, and methods of machine
          learning typically do not give us point 1 (and sometimes 2). Machine learning models do not give good causal estimates for 2 reasons:
          <ol>
-            <li>Regularization, necessary for fitting complex data, induces a bias. To reduce overfitting, analysts using machine learning methods often use 
+            <li>Regularization, necessary for fitting complex data, induces a bias (think bias variance trade-ff). To reduce overfitting, analysts using machine learning methods often use 
                 regularization. If you're familiar with LASSO or RIDGE regression, this is a classic example of using regularization. However, this necessarily 
                 increases the bias of estimates.</li>
             <li>Despite our best efforts, machine learning tends to overfit data, further biasing results.
@@ -91,16 +91,16 @@
         <ul>
             <li>X the features</li>
             <li> Y the outcome</li>
-            <li>T the treatment (it can be binary, continuous, or categorical)</li>
+            <li> T the treatment (it can be binary, continuous, or categorical)</li>
             <li> g(x) some mappong of x to y</li>
             <li> m(x) some mapping of x to t</li>
-            <li> theta - the treatment effect</li>
+            <li> theta - the treatment effect. Here its a scalar, for simplicity, but this doesn't have to be the case</li>
             <li> the noise, which cancels out on average</li>
         </ul>
         
         This equation is essentially formalizing the graph we had displayed earlier.
         
-        <div class="fakeimg">Image of graph</div>
+        <img src="dml/causal_diag.png" class="fakeimg" style="height:200px;" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
         
         These equations are a useful example because they give us a specific functional form for how T affects Y (T * theta). Since this relationship is linear,
         it makes some of the math a little bit nicer. In the end, we want DML to work for more than just this specific situation, but this definition is useful for now. 
@@ -132,72 +132,60 @@
         </code>></pre>
         
         Let's imaging you haven't read this blog post and you given some X,T, and Y data, as well as the data generating equations above. You're then asked to estimate what theta is. They tell you they know the answer, but want to see if you can find it on your own. 
-        If you're like me, your first instinct might be to move some terma around in the equation to isolate theta, and then try to estimate all the missing variables with machine learning.  
-        
-        $$ EQUATION $$
+        If you're like me, your first instinct might be to build one machine learning model of $$ T\theta_{0} + g_{0}(X) $$ and regress out $$T$$ to solve for $$\theta_0$$.  
         
         This is a little tricky because g0(X) is not the influence of X on Y, its the influence of X on the part of Y that isnt influenced by T. Therefore we have to do this iteratively
-        <ol>
-            <li>Get an initiail estimate of theta by solving an intermediate machine problem (l0(X)) that predicts Y from X.</li>
-            <li>Subtract T from that initial estimate to fit g0</li> 
-            <li>Regress T from g0 to get theta.</li>
-        </ol>
-         
-        In code, the direct method would look like this.
-
-        <pre><code class="python"> 
-        import numpy as np
-        from sklearn.ensemble import RandomForestRegressor
-        import matplotlib.pyplot as plt
-
-        # initializa structure for theta_0- - theta
-        errors = []
-        for i in range(n_sim):
-            # get data
-            x, y, t = get_data(n, n_x)
-            
-            # this will be our model for predicting Y from X
-            ml_l = RandomForestRegressor()
-            # this will be our model for predicting Y - T*theta from X
-            ml_g = RandomForestRegressor()
+        In code, the direct method would look like this:
         
-            ml_l.fit(x,y)
-            l_hat = ml_l.predict(x)
+        First, we'd simulate our data, build our machine learning estimate of $$Y$$ from $$ T\theta_{0} + g_{0}(X) $$ (we'll call this model $$l_0(X)$$)
+        <pre><code class="python"> 
+        from sklearn.ensemble import RandomForestRegressor
+    
+        # get data
+        x, y, t = get_data(n, n_x)
             
-            # initial guess for theta
-            u_hat = y - l_hat
-            psi_a = -np.multiply(t, t)
-            psi_b = np.multiply(t, u_hat)
-            theta_init = -np.mean(psi_b) / np.mean(psi_a)
-            
-            # get estimate for g0
-            ml_g.fit(x, y - t*theta_init)
-            g_hat = ml_g.predict(x)
-            
-            # compute residuals
-            u_hat = y - g_hat
-            psi_a = -np.multiply(t, t)
-            psi_b = np.multiply(t, u_hat)
-            
-            # get estimate and SE
-            theta_hat = -np.mean(psi_b) / np.mean(psi_a)
-            psi = psi_a * theta_hat + psi_b
-            err = theta_hat - theta
-            J = np.mean(psi_a)
-            sigma2_hat = 1 / len(y) * np.mean(np.power(psi, 2)) / np.power(J, 2)
-            err = err/np.sqrt(sigma2_hat)
-            errors.append(err)
-            
-        plt.figure()
-        plt.hist(errors)
-        _, y_max = plt.ylim()
-        plt.plot([0,0], [0,y_max], 'r')
-        plt.show()
+        # this will be our model for predicting Y from X
+        ml_l = RandomForestRegressor()
+        ml_l.fit(x,y)
         </code>></pre>
+        
+        Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data). Next we can take an initial guess for theta, and then fit our estimate of $$g_0(X)$$
+        <pre><code class="python"> 
+         # this will be our model for predicting Y - T*theta from X, or g0_hat
+         ml_g = RandomForestRegressor()
+            
+         # initial guess for theta
+         l_hat = ml_l.predict(x)
+         psi_a = -np.multiply(t, t)
+         psi_b = np.multiply(t, y - l_hat)
+         theta_init = -np.mean(psi_b) / np.mean(psi_a)
+            
+         # get estimate for g0
+         ml_g.fit(x, y - t*theta_init)
+         g_hat = ml_g.predict(x)
+         </code>></pre>
+
+        Lastly, we can regress the effect of T our from our prediction
+        <pre><code class="python"> 
+        # compute residuals
+        u_hat = y - g_hat
+        psi_a = -np.multiply(t, t)
+        psi_b = np.multiply(t, u_hat)
+            
+        # get estimate of theta and and SE
+        theta_hat = -np.mean(psi_b) / np.mean(psi_a)
+        psi = psi_a * theta_hat + psi_b
+        err = theta_hat - theta
+        J = np.mean(psi_a)
+        sigma2_hat = 1 / len(y) * np.mean(np.power(psi, 2)) / np.power(J, 2)
+        err = err/np.sqrt(sigma2_hat)
+        </code>></pre>
+
+        If we repeat this process 200 times, we can genereate a histogram of our error term and see how well we did.
          
          <img src="dml/nocf_noorth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on 25, ranging from about 20 to 30"></img>
         
-         Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data). Now we can see how well we did! If our estimate is good, we would expect the normalized difference between our estimate of theta, and the real theta to
+         If our estimate is good, we would expect the normalized difference between our estimate of theta, and the real theta to
          be centered on 0.
 
         This histogram shows that is not the case. Our estimate is way off and centered on a positive value. What went wrong?
@@ -237,61 +225,47 @@
             <li> ... this method adds a new term that we're going to ignore for now. But it comes back later!</li>
         </ul>
         
-        In code, this new process looks like this:
+        In code, this new process only differs in the estimation $$g_0(X)$$ amd $$\theta_0$$. So fitting $l_0(X)$$ will be the same, but then we have:
         <pre><code class="python"> 
+        # model for predicting T from X - new to the regularized version!
+        ml_m = RandomForestRegressor()
+        # model for predicting Y - T|X*theta from X
+        ml_g = RandomForestRegressor()
         
-        errors = []
-        for i in range(n_sim):
-            # get data
-            x, y, t = get_data(n, n_x)
+        ml_m.fit(x,t)
+        m_hat = ml_m.predict(x)
+
+        # this is the part that's different
+        v_hat = t - m_hat
+        psi_a = -np.multiply(v_hat, v_hat)
+        psi_b = np.multiply(v_hat, y - l_hat)
+        theta_init = -np.mean(psi_b) / np.mean(psi_a)
             
-            # model for predicting Y from X
-            ml_l = RandomForestRegressor()
-            # model for predicting T from X - new to the regularized version!
-            ml_m = RandomForestRegressor()
-            # model for predicting Y - T|X*theta from X
-            ml_g = RandomForestRegressor()
-        
-            ml_l.fit(x,y)
-            ml_m.fit(x,t)
-            l_hat = ml_l.predict(x)
-            m_hat = ml_m.predict(x)
-            
-            # initial guess for theta
-            u_hat = y - 
-            # this is the part that's different
-            v_hat = t - m_hat
-            psi_a = -np.multiply(v_hat, v_hat)
-            psi_b = np.multiply(v_hat, u_hat)
-            theta_init = -np.mean(psi_b) / np.mean(psi_a)
-            
-            # get estimate for G
-            ml_g.fit(x, y - t*theta_init)
-            g_hat = ml_g.predict(x)
-            
-            # compute residuals
-            u_hat = y - g_hat
-            psi_a = -np.multiply(v_hat, v_hat)
-            psi_b = np.multiply(v_hat, u_hat)
-            
-            theta_hat = -np.mean(psi_b) / np.mean(psi_a)
-            psi = psi_a * theta_hat + psi_b
-            err = theta_hat - theta
-            J = np.mean(psi_a)
-            sigma2_hat = 1 / len(y) * np.mean(np.power(psi, 2)) / np.power(J, 2)
-            err = err/np.sqrt(sigma2_hat)
-            errors.append(err)
-            
-        plt.figure()
-        plt.hist(errors)
-        _, y_max = plt.ylim()
-        plt.plot([0,0], [0,y_max], 'r')
-        plt.show()   
+        # get estimate for G
+        ml_g.fit(x, y - t*theta_init)
+        g_hat = ml_g.predict(x)
         </code>></pre>
+
+        Similarly, when we get our finalt estmimate for $$\theta$$
+        <pre><code class="python">    
+         # compute residuals
+         u_hat = y - g_hat
+         psi_a = -np.multiply(v_hat, v_hat)
+         psi_b = np.multiply(v_hat, u_hat)
+            
+         theta_hat = -np.mean(psi_b) / np.mean(psi_a)
+         psi = psi_a * theta_hat + psi_b
+         err = theta_hat - theta
+         J = np.mean(psi_a)
+         sigma2_hat = 1 / len(y) * np.mean(np.power(psi, 2)) / np.power(J, 2)
+         err = err/np.sqrt(sigma2_hat)
+        </code>></pre>
+
+        If we plot a similar histogram over 200 simulations we'll get something like this:
         
          <img src="dml/nocf_orth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on -8, ranging from about -12 to -4"></img>
 
-        And we have greatly reduced our bias!
+        And we have greatly reduced (but not eliminated) our bias!
 
         For this specific data generating process, we now have a way of estimating theta without regularization bias! However I mentioned earlier that we want to be 
         able to estimate more than only this process. In particular, step three involves linear regression, and only works in our partially linear example. How do
@@ -362,60 +336,50 @@
         from sklearn.model_selection import KFold
         # number of splits for cross fitting
         nSplit = 2
-        errors = []
-        for i in range(n_sim):
-            # get data
-            x, y, t = get_data(n, n_x)
-            # cross fit
-            kf = KFold(n_splits=nSplit)
-            # save theta hats, and some variables for getting variation in theta_hat
-            theta_hats = []
-            sigmas = []
+        x, y, t = get_data(n, n_x)
+
+        # cross fit
+        kf = KFold(n_splits=nSplit)
+        # save theta hats, and some variables for getting variation in theta_hat
+        theta_hats = []
+        sigmas = []
             for train_index, test_index in kf.split(x):
                 x_train, x_test = x[train_index], x[test_index]
                 y_train, y_test = y[train_index], y[test_index]
                 t_train, t_test = t[train_index], t[test_index]
-                
+
                 ml_l = RandomForestRegressor()
                 ml_m = RandomForestRegressor()
                 ml_g = RandomForestRegressor()
-        
+
                 ml_l.fit(x_train,y_train)
                 ml_m.fit(x_train,t_train)
                 l_hat = ml_l.predict(x_test)
                 m_hat = ml_m.predict(x_test)
-                
+
                 # initial guess for theta
                 u_hat = y_test - l_hat
                 v_hat = t_test - m_hat
                 psi_a = -np.multiply(v_hat, v_hat)
                 psi_b = np.multiply(v_hat, u_hat)
                 theta_init = -np.mean(psi_b) / np.mean(psi_a)
-        
+
                 # get estimate for G
                 ml_g.fit(x_train, y_train - t_train*theta_init)
                 g_hat = ml_g.predict(x_test)
-        
+
                 # compute residuals
                 u_hat = y_test - g_hat
-        
+
                 psi_a = -np.multiply(v_hat, v_hat)
                 psi_b = np.multiply(v_hat, u_hat)
-        
+
                 theta_hat = -np.mean(psi_b) / np.mean(psi_a)
                 theta_hats.append(theta_hat)
                 psi = psi_a * theta_hat + psi_b
                 sigma2_hat = 1 / len(y_test) * np.mean(np.power(psi, 2)) / np.power(J, 2)
                 sigmas.append(sigma2_hat)
             err = np.mean(theta_hat) - theta
-            err = err/np.sqrt(np.mean(sigma2_hat))
-            errors.append(err)
-            
-        plt.figure()
-        plt.hist(errors)
-        _, y_max = plt.ylim()
-        plt.plot([0,0], [0,y_max], 'r')
-        plt.show()
         </code></pre>
 
         Using this process, we can correct the bias in our stimateion
