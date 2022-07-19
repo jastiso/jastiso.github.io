@@ -3,9 +3,6 @@
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script>
-<div class="header">
-  <h2>Blog Name</h2>
-</div>
 
 <div class="row">
   <div class="leftcolumn">
@@ -112,11 +109,14 @@
         theta = -0.4
 
         # define a function for generating data
-        def get_data(n, n_x):
+        def get_data(n, n_x, theta):
         """
+        partially linear data generating process
+        
         Inputs:
         n       the number of observations to simulate
         n_x     the number of columns of X to simulate
+        theta   a scalar value for theta
         """
             cov_mat = toeplitz([np.power(0.7, k) for k in range(n_x)])
             x = np.random.multivariate_normal(np.zeros(n_x), cov_mat, size=[n, ])
@@ -142,7 +142,7 @@
         from sklearn.ensemble import RandomForestRegressor
     
         # get data
-        x, y, t = get_data(n, n_x)
+        x, y, t = get_data(n, n_x, theta)
             
         # this will be our model for predicting Y from X
         ml_l = RandomForestRegressor()
@@ -337,7 +337,7 @@
         from sklearn.model_selection import KFold
         # number of splits for cross fitting
         nSplit = 2
-        x, y, t = get_data(n, n_x)
+        x, y, t = get_data(n, n_x, theta)
 
         # cross fit
         kf = KFold(n_splits=nSplit)
@@ -523,7 +523,7 @@
         skf = StratifiedKFold(n_splits=nFold)
         </code></pre>
         
-        Now that we how our cross validation and parameters set up, we can find the best parameters
+        Now that we how our cross validation and parameters set up, we can find the best parameters. We'll first pick a random starting set, and specify a model
         
         <pre><code class="python">        
         # randomly pick some parameters
@@ -541,7 +541,10 @@
                             min_samples_leaf=l,
                             min_samples_split=s,
                             n_estimators=n)
-
+        </code>></pre>
+        
+        Now we can evaluate this parameter selection across all folds
+        <pre><code class="python">
         # stratified cv
         for train_index, test_index in skf.split(x, y):
             X_htrain, X_htest = x[train_index], x[test_index]
@@ -559,7 +562,11 @@
                         'score_sc': [np.std(scores)],
                         'med': [med]}
             no_score = pd.concat([hp_score, curr_dict])
+        </code>></pre>
+        
+        If you repeat this process and save all the scores, you can then pick the best parameter set
 
+        <pre><code class="python">
         # pick the best parameters, and fit the model
         best_n = no_score.loc[no_score['score'] == no_score['score'].min(), 'n'].values[0]
         best_d = no_score.loc[no_score['score'] == no_score['score'].min(), 'depth'].values[0]
