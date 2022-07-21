@@ -1,9 +1,10 @@
-<script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
 <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/styles/default.min.css">
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script>
-
+  
 <div class="row">
   <div class="leftcolumn">
     <div class="card">
@@ -86,13 +87,13 @@
         
         Let's walk through the terms:
         <ul>
-            <li> $X$ the features</li>
-            <li> $Y$ the outcome</li>
-            <li> $T$ the treatment (it can be binary, continuous, or categorical)</li>
-            <li> $g_0(x)$ some mappong of x to y, excluding the effect of T and $\theta_0$</li>
-            <li> $m_0(x)$ some mapping of x to t</li>
-            <li> $\theta$ - the treatment effect. Here its a scalar, for simplicity, but this doesn't have to be the case</li>
-            <li> $U, V$ the noise, which cancels out on average</li>
+            <li> \(X\) the features</li>
+            <li> \(Y\) the outcome</li>
+            <li> \(T\) the treatment (it can be binary, continuous, or categorical)</li>
+            <li> \(g_0(x)\) some mappong of x to y, excluding the effect of T and $\theta_0$</li>
+            <li> \(m_0(x)\) some mapping of x to t</li>
+            <li> \(\theta\) - the treatment effect. Here its a scalar, for simplicity, but this doesn't have to be the case</li>
+            <li> \(U, V\) the noise, which cancels out on average</li>
         </ul>
         
         This equation is essentially formalizing the graph we had displayed earlier.
@@ -132,12 +133,12 @@
         </code>></pre>
         
         Let's imagine you're given some X, T, and Y data by your emploter, as well as the data generating equations above. You're then asked to estimate what theta is. 
-        One first attempt might be to build one machine learning model of $T\theta_{0} + g_{0}(X)$ and $g_0(X)$, then regress out $T$ to solve for $\theta_0$.  
+        One first attempt might be to build one machine learning model of \(T\theta_{0} + g_{0}(X)\) and \(g_0(X)\), then regress out \(T\) to solve for \(\theta_0\).  
         
-        This is a little tricky because $g_0(X)$ is not the influence of $X$ on $Y$, its the influence of $X$ on the part of $Y$ that isnt influenced by $T \times \theta_0$. Therefore we have to do this iteratively: get an initial guess for $\theta_0$ in order to estimate $g_0(X)$; then use that estimate of g_0(X) to solve for $\theta_0$.
+        This is a little tricky because \(g_0(X)\) is not the influence of \(X\) on \(Y\), its the influence of \(X\) on the part of \(Y\) that isnt influenced by \(T \times \theta_0\). Therefore we have to do this iteratively: get an initial guess for \(\theta_0\) in order to estimate \(g_0(X)\); then use that estimate of \(g_0(X)\) to solve for \(\theta_0\).
         In code, the direct method would look like this:
         
-        First, we'd simulate our data, and build our machine learning estimate of $Y$ from $T\theta_{0} + g_{0}(X)$ (we'll call this model $l_0(X)$)
+        First, we'd simulate our data, and build our machine learning estimate of \(Y\) from \(T\theta_{0} + g_{0}(X)\) (we'll call this model \(l_0(X)\))
         <pre><code class="python"> 
         from sklearn.ensemble import RandomForestRegressor
     
@@ -149,7 +150,7 @@
         ml_l.fit(x,y)
         </code>></pre>
         
-        Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data generating function). Next we can take an initial guess for $$\theta_0$$, and then fit our estimate of $$g_0(X)$$
+        Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data generating function). Next we can take an initial guess for \(\theta_0\), and then fit our estimate of \(g_0(X)\)
         <pre><code class="python"> 
          # this will be our model for predicting Y - T*theta from X, or g0_hat
          ml_g = RandomForestRegressor()
@@ -185,7 +186,7 @@
          
          <img src="dml/nocf_noorth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on 25, ranging from about 20 to 30"></img>
         
-         If our estimate is good, we would expect the normalized difference between our estimate of $$\theta$$ and the real theta to
+         If our estimate is good, we would expect the normalized difference between our estimate of $\theta$ and the real theta to
          be centered on 0.
 
         This histogram shows that is not the case. Our estimate is way off and centered on a positive value. What went wrong?
@@ -195,13 +196,13 @@
         As a reminder, the goal here would be for the left hand side to converge to 0 as we get more data.
 
          <h4>regularization bias</h4>
-        
-        $$ \sqrt{n}(\hat{\theta_0} - \theta_0) = $$ <span style="color:#023743">$$ (\frac{1}{n}\sum_{i\in I}^nT_{i}^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nT_{i}U_{i} $$</span> $$+$$ <span style="color:#021743">$$ (\frac{1}{n}\sum_{i\in I}^nT_{i}^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nT_{i}(g_0(X_i) - \hat{g_0}(X_i))$$</span>
+
+        \( \sqrt{n}(\hat{\theta_0} - \theta_0) = \) <span style="color:#9b6981">\((\frac{1}{n}\sum_{i\in I}^nT_{i}^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nT_{i}U_{i}\)</span> \(+\) <span style="color:#7887a4">\((\frac{1}{n}\sum_{i\in I}^nT_{i}^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nT_{i}(g_0(X_i) - \hat{g_0}(X_i))\)</span>
         
         <ul>
             <li>The left hand side is our scaled error term - what we want to go to 0</li>
-            <li style="color:#023743">Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0</li>
-            <li style="color:#021743">This term is where the problem is. Our estimate error is never going to be 0, and won;t quite be cenmtered on 0. This because of the deal we make as 
+            <li style="color:#9b6981">Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0</li>
+            <li style="color:#7887a4">This term is where the problem is. Our estimate error is never going to be 0, and won;t quite be cenmtered on 0. This because of the deal we make as 
                 data scientists working with complex data. Reduce the varaince (overfitting) of our machine learning model, we induce some bias in our estimate (often through 
                 regularization). Additionally, T depends on X, and therefore also will not converge to 0. Because of this, g-g_hat times T will be small, but not zero. 
                 It will be divided by a large number, and will converge to 0 eventually, but too slowly to be practical. </li>
@@ -209,14 +210,14 @@
         
         We have to remove the effect of X on T to circumvent this bias. We can do this in three steps:
         <ol>
-            <li>Estimate $T$ from $X$ using ML model of choice (different from the direct method!)</li>
-            <li> Estimate $Y$ from $X$ using ML model of choice</li>
-            <li> Regress the residuals of each model onto eachother to get $\theta_0$</li>
+            <li>Estimate \(T\) from \(X\) using ML model of choice (different from the direct method!)</li>
+            <li> Estimate \(Y\) from \(X\) using ML model of choice</li>
+            <li> Regress the residuals of each model onto eachother to get \(\theta_0\)</li>
         </ol>
 
         We can write out a new error equation like so:
         
-        $$ { \sqrt{n}(\hat{\theta_0} - \theta_0) = $$<span style="color:#023743">$$(EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i$$</span> $$+$$ <span style="color:#021743">$$(EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i))$$</span> + ... } $$
+        \(\sqrt{n}(\hat{\theta_0} - \theta_0) =\)<span style="color:#023743">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i\)</span> \(+)\ <span style="color:#021743">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i))\)</span> \(+ ...  \)
        
         <ul>
             <li>The left hand side is the same as before</li>
@@ -225,7 +226,7 @@
             <li> ... this method adds a new term that we're going to ignore for now. But it comes back later!</li>
         </ul>
         
-        In code, this new process only differs in the estimation $g_0(X)$ amd $\theta_0$. So fitting $l_0(X)$ will be the same, but then we have:
+        In code, this new process only differs in the estimation \(g_0(X)\) amd \(\theta_0\). So fitting \(l_0(X)\) will be the same, but then we have:
         <pre><code class="python"> 
         # model for predicting T from X - new to the regularized version!
         ml_m = RandomForestRegressor()
@@ -246,7 +247,7 @@
         g_hat = ml_g.predict(x)
         </code>></pre>
 
-        Similarly, when we get our finalt estmimate for $$\theta$$
+        Similarly, when we get our finalt estmimate for \(\theta\)
         <pre><code class="python">    
          # compute residuals
          u_hat = y - g_hat
@@ -275,16 +276,16 @@
          The least squares solution for linear relationships esentially finds the parameters for a line that minimizes the error between the predicted points on 
          the line, and the observed data. We can wrote this as the minimization of a cost function of our data and true parameters
          
-         $ \psi(W; \theta, \eta) = 0 $
+         $$ \psi(W; \theta, \eta) = 0 $$
          
          This equation looks vary different but contains a lot of the same players as before:
 
          <ol>
-             <li> $W$ is the data (X,Y, and T)</li>
-             <li> $\theta$ is the true treatment effect</li>
-             <li> $\psi$ is just some cost function. We are purposely not defining it because we want this to be a general solution, but you can think of it as any kind of 
+             <li> \(W\) is the data (\(X\),\(Y\), and \(T\))</li>
+             <li> \(\theta\) is the true treatment effect</li>
+             <li> \(\psi\) is just some cost function. We are purposely not defining it because we want this to be a general solution, but you can think of it as any kind of 
                 error minimization function</li>
-             <li> $\eta$ is called the nuissance parameter, and here contains g and m</li>
+             <li> \(\eta\) is called the nuissance parameter, and here contains g and m</li>
          </ol>
 
          Solving minimization problems like these are often difficult and subject to noise. To assure we find a robust solution, we're going to add one other condition
@@ -302,9 +303,9 @@
          
          We now have a more generalizable set of steps
          <ol>
-             <li> Estimate $T$ from $X$</li>
-             <li> Estimate $Y$ from $X$</li>
-             <li> Solve moment equation to get $\theta$</li>
+             <li> Estimate \(T\) from \(X\)</li>
+             <li> Estimate \(Y\) from \(X\)</li>
+             <li> Solve moment equation to get \(\theta\)</li>
          </ol>
         
          <h4>overfitting bias</h4>
@@ -318,17 +319,17 @@
         $$ { \sqrt{n}(\hat{\theta_0} - \theta_0) = (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i + (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i)) + \frac{1}{\sqrt{n}}\sum_{i \in I}^{n}V_i(\hat{g_0}(X_i) - g_0(X_i)) } $$
         
         We've discussed the first terms perviously, but I'm revealing the last term we had hidden previously.
-        * If any overfitting is present in $\hat{g_0}$, the estimate will pick up some noise from the noise term. This will slow down the convergence of this new term to 0
+        * If any overfitting is present in \(\hat{g_0}\), the estimate will pick up some noise from the noise term. This will slow down the convergence of this new term to 0
         
-        The solution to this bias is to fit $g$ and $m$ on a different set of data than the set used to estimate $\theta$. Similar to how cross-validation avoids overfitting 
-        during parameter selection, this method (called cross-fitting) avoids overfitting in out estimation of $\theta$. This changes our DML steps slightly.
+        The solution to this bias is to fit \(g\) and \(m\) on a different set of data than the set used to estimate \(\theta\). Similar to how cross-validation avoids overfitting 
+        during parameter selection, this method (called cross-fitting) avoids overfitting in out estimation of \(\theta\). This changes our DML steps slightly.
         
         <ol>
-            <li>Split the data into $K$ folds. For each fold:</li>
-            <li> Estimate $T$ from $X$ using ML model of choice and fold $K$</li>
-            <li> Estimate $Y$ from $X$ using ML model of choice and fold $K$</li>
-            <li> Solve moment equation get $\theta$ using other sets of data</li>
-            <li>Select $\theta$ estimate that gives the best solution over all splits.</li>
+            <li>Split the data into \(K\) folds. For each fold:</li>
+            <li> Estimate \(T\) from \(X\) using ML model of choice and fold \(K\)</li>
+            <li> Estimate \(Y\) from \(X\) using ML model of choice and fold \(K\)</li>
+            <li> Solve moment equation get \(\theta\) using other sets of data</li>
+            <li>Select \(\theta\) estimate that gives the best solution over all splits.</li>
         </ol>
 
         In code, all this does is add a loop over folds:
@@ -393,12 +394,12 @@
         <h3>Example, with code</h3>
         We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, here's a reminder of the steps of DML. 
 
-        For simplicity, we're going to use a similar data generating process we discuessed above, but with one change. Now, $\theta$ is going to be a function of $X$. This means that treatment effect will differ for different individuals. This is expected in medical contextx - for example, people with high body mass (X) tend to reach lower enesthetics depths (Y) for the same dose of an anesthetic (T). When $\theta$ is a function of $X$, it is called a heterogeneous, of conditional average treatment effect (abbreviated CATE in the package nomenclature).
+        For simplicity, we're going to use a similar data generating process we discuessed above, but with one change. Now, \(\theta\) is going to be a function of \(X\). This means that treatment effect will differ for different individuals. This is expected in medical contextx - for example, people with high body mass (X) tend to reach lower enesthetics depths (Y) for the same dose of an anesthetic (T). When \(\theta\) is a function of \(X\), it is called a heterogeneous, of conditional average treatment effect (abbreviated CATE in the package nomenclature).
         
         $$ {Y = T\theta_{0}(X) + g_{0}(X) + U, E[U | X,T] = 0]} $$
         $$ {T = m_{0}(X) + V, E[V | X] = 0} $$
         
-        As a reminder, $X$ are our patient features, $Y$ is an predictor of outcome or risk, and $T$ is an indicator of treatment. While in theory, $T$ can be binary, continuous, or categorical, the specific code we are discussing here does not work for categorical treatments. $\theta_0$ is the conditional average treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
+        As a reminder, \(X\) are our patient features, \(Y\) is an predictor of outcome or risk, and \(T\) is an indicator of treatment. While in theory, \(T\) can be binary, continuous, or categorical, the specific code we are discussing here does not work for categorical treatments. \(\theta_0\) is the conditional average treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
         
         <pre><code class="python"> simulating data code </code>></pre>
         
@@ -406,7 +407,7 @@
         
         <pre><code class="python"> data splitting code </code>></pre>
         
-        The econML package has different 'estimator' functions that all take data, a Y model ($g_0(X)$), and a T model ($m_0(X)$) as input. Therefore, we're going to start with step 2 listed above: estimating $T$ (we'll do the data splitting process later). You can really do this however you want, we're just going to define a simple random forest model here. econML has the benefit of working with GridSearchCV object as well, so we're actually going to define not one speciifc model, but a set models with different parameterizations (if you aren't familiar with GridSearchCV, check out its docs).
+        The econML package has different 'estimator' functions that all take data, a Y model (\(g_0(X)\)), and a T model (\(m_0(X)\)) as input. Therefore, we're going to start with step 2 listed above: estimating \(T\) (we'll do the data splitting process later). You can really do this however you want, we're just going to define a simple random forest model here. econML has the benefit of working with GridSearchCV object as well, so we're actually going to define not one speciifc model, but a set models with different parameterizations (if you aren't familiar with GridSearchCV, check out its docs).
         
         <pre><code class="python">
         from sklearn.ensemble import RandomForestRegressor
@@ -454,7 +455,7 @@
         
         <div class="fakeimg">Image of graph</div>
 
-        We can do exactly the same thing for the $Y$ model. Let's use a gradient boosted classifier to mix things up.
+        We can do exactly the same thing for the \(Y\) model. Let's use a gradient boosted classifier to mix things up.
         
         <pre><code class="python"> 
         from xgboost import XGBClassifier
