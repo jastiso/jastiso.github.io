@@ -14,15 +14,17 @@
       <p>
 
         <h3>What is double machine learning</h3>
-        Double machine learning is actually a way to esetimate causal effects in large, complex data that have a specific causal structure. Previously many causal 
-        modeling methods relied on assuming a specific form of the data rather than learning it, and didn't allow with data where the entropy of the parameter space increases with increasing observations (in otherwords - most large, modern datasets), making them less useful in
-         many modern data settings. DML allows these two to coexist, which is the source of much of the hype in economics. When I was trying to learn more about the method, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there had a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations. This is the info I wish I had when I was learning. 
+        To me -- and potentially, <span href="https://youtu.be/eHOjmyoPCFU?t=110"> its creator </span>-- Double Machine Learning sounds like a trendy name you would give a method to try to sound impressive in developer spaces. Double (or debiased) machine learning is actually a way to esetimate causal effects in large, complex data that have a specific causal structure. Previously many causal 
+        modeling methods relied on assuming a specific form of the data rather than learning it - namely that varialbes were normally distibuted and linearly related to eachother. Additionally, these methods don't allow for complex data, or data where the entropy of the parameter space increases with increasing observations (in otherwords - most large, modern datasets). Combined, these features made causal inference difficult to apply to realworld problems.
+        Double machine learning (DML) allows causal inference to coexist with complex data with few assumptions, which has drummed up a lot of well deserved excitement about the method (primarily in economics). 
+        When I was trying to learn more about the method, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there had a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations. This is the info I wish I had when I was learning. 
+        This post focuses on understanding how the DML algorthim works. I hop later to do a post on its application, but for now there are some good tutorial <span href="https://econml.azurewebsites.net/spec/estimation/dml.html">here.</span>
 
         
-        <h4>the problem</h4>
-        Similarly, clinical machine learning projects have made a major push towards building risk or diagnostic models. Less attention has been devoted to using
-        learning to suggest treatments or interventions. I think it's worth testing to waters to see if this can be done responsibly. DML presents one path forward. 
-        I had mentioned previously that DML assumes a particular causal structure in your data. We can illustrate that struvture like this:
+        <h4>what clinical problems can DML be used for?</h4>
+        The adoption of this methods aligns nicely with some new trends in clinical informatics (my current field). Clinical machine learning projects have made a major push towards building risk or diagnostic models. Less attention has been devoted to using
+        learning to suggest treatments or interventions. DML presents one path forward. 
+        I had mentioned previously that DML assumes a particular causal structure in your data, and therefore a particular type of problem. We can illustrate that struvture like this:
         
         <img src="dml/causal_diag.png" class="fakeimg" style="height:200px;" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
         
@@ -391,7 +393,42 @@
         
         Now we have a pretty good estimate! So far, we've gone over what the DML method is, and how is overcomes biases from regularization and overfitting to get good estimates of $\theta$ without making strong assumptions about the form of the data. We didn't go over here, but it is also possible to calculate confidence intervals for these estimates, which are neccessary for applications to clinical contexts. Now I'll show you how to apply it.
          
-        <h3>Example, with code</h3>
+        
+        <h3>Other resources</h3>
+        <ul>
+            <li href="https://towardsdatascience.com/double-machine-learning-for-causal-inference-78e0c6111f9d">This blog post on DML</li>
+            <li>I liked <span hreaf="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://scholar.princeton.edu/sites/default/files/bstewart/files/felton.chern_.slides.20190318.pdf">these slides</span> so much I risked the social humilation that comes with liking a twitter post from years ago to show my support</li>
+            <li href="https://docs.doubleml.org/stable/guide/basics.html#overcoming-regularization-bias-by-orthogonalization">DoubleML github (see this for code to exactly replicate the figures in the paper)</li>
+        </ul>
+        
+        <h3>References</h3>
+        <ul>
+            <li>Rose, S., & Rizopoulos, D. (2020). Machine learning for causal inference in Biostatistics. In Biostatistics (Oxford, England) (Vol. 21, Issue 2, pp. 336–338). NLM (Medline). https://doi.org/10.1093/biostatistics/kxz045</li>
+            <li>Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., & Robins, J. (2016). Double/Debiased Machine Learning for Treatment and Causal Parameters. http://arxiv.org/abs/1608.00060</li>
+        </ul>
+       
+        </p>
+    </div>
+
+    <div class="card">
+      <h2>How many roads must a random walker walk down before it gets out of Reykjavik?</h2>
+      <h5>Analyzing your Google location history and biased random walkers on street graphs (in Python), July 25, 2022</h5>
+      <div class="fakeimg" style="height:200px;">Image</div>
+      <h3>Google location data as introspection</h3>
+
+      <h3>Visualizing your paths through cities</h3>
+      <h4>Using the python packages OSMNX and networkX</h4>
+
+      <h3>Biased random walkers</h3>
+      <h4>Levy flights and novelty prioritization</h4>
+    
+    </div>
+    
+ <!---   <div class="card">
+      <h2>TITLE HEADING</h2>
+      <h5>Title description, Sep 2, 2017</h5>
+      <div class="fakeimg" style="height:200px;">Image</div>
+      <h1>Example, with code</h1>
         We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, here's a reminder of the steps of DML. 
 
         For simplicity, we're going to use a similar data generating process we discuessed above, but with one change. Now, \(\theta\) is going to be a function of \(X\). This means that treatment effect will differ for different individuals. This is expected in medical contextx - for example, people with high body mass (X) tend to reach lower enesthetics depths (Y) for the same dose of an anesthetic (T). When \(\theta\) is a function of \(X\), it is called a heterogeneous, of conditional average treatment effect (abbreviated CATE in the package nomenclature).
@@ -648,28 +685,6 @@
 
         We did pretty well! As expected, given the simulated data. This concludes the extent of the code walkthrough. If you're still looking for more, check out the other resources I found useful below.
         
-        <h3>Other resources</h3>
-        <ul>
-            <li>blogs (liking old twitter posts)</li>
-            <li>slides</li>
-            <li>econml tutorials</li>
-        </ul>
-        
-        <h3>References</h3>
-        <ul>
-            <li>causal inferences issue</li>
-            <li>DML paper</li>
-            <li>GRF estimator</li>
-        </ul>
-       
-        </p>
-    </div>
-    
- <!---   <div class="card">
-      <h2>TITLE HEADING</h2>
-      <h5>Title description, Sep 2, 2017</h5>
-      <div class="fakeimg" style="height:200px;">Image</div>
-      <p>Some text..</p>
     </div>
   </div>
   <div class="rightcolumn">
