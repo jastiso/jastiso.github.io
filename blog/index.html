@@ -18,13 +18,13 @@ layout: default
       <p>
 
         <h3>What is double machine learning</h3>
-        To me -- and potentially, <a href="https://youtu.be/eHOjmyoPCFU?t=110"> its creator </a>-- Double Machine Learning sounds like a trendy name you would give a method to try to sound impressive in developer spaces. Double (or debiased) machine learning is actually a way to esetimate specific causal effects in large, complex data [1]. Previously many causal 
+        To me -- and potentially, <a class="ext" href="https://youtu.be/eHOjmyoPCFU?t=110"> its creator </a>-- Double Machine Learning sounds like a trendy name you would give a method to try to sound impressive in developer spaces. Double (or debiased) machine learning is actually a way to esetimate specific causal effects in large, complex data [1]. Previously many causal 
         modeling methods relied on assuming a specific form of the data rather than learning it - namely assuming that varialbes were normally distibuted and linearly related to eachother. In addition to these faulty assumptions, these methods don't allow for complex data where the entropy of the parameter space increases with increasing observations (in otherwords - most large, modern datasets). Combined, these features made causal inference difficult to apply to realworld problems.
         
         
         A method called double machine learning (DML) allows causal inference to coexist with complex data with few assumptions, which has drummed up a lot of well deserved excitement about the method (primarily in economics). 
         When I was trying to learn more about DML, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there took a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations.  
-        This post focuses on understanding how the DML algorthim works. I hope later to do a post on its application, but for now I'll point people to this <a href="https://econml.azurewebsites.net/spec/estimation/dml.html">tutorial</a>.
+        This post focuses on understanding how the DML algorthim works. I hope later to do a post on its application, but for now I'll point people to this <a class="ext" href="https://econml.azurewebsites.net/spec/estimation/dml.html">tutorial</a>.
 
         
         <h4>What clinical problems can DML be used for?</h4>
@@ -78,8 +78,8 @@ layout: default
         
         Alternatives
         <ol>
-            <li><a href="https://econml.azurewebsites.net/spec/estimation/dr.html">Doubly robust learning</a></li>
-            <li><a href="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://watermark.silverchair.com/kxz042.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAtswggLXBgkqhkiG9w0BBwagggLIMIICxAIBADCCAr0GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMiwE2F0xraZrG-U9LAgEQgIICjnQYE-ihiKqhjwGSIsl6-je11Cst4bUYpo6zWUoHBJQAORHyVuR-es86CuAcmST1wB9Fvhu4NaB8MgSr81LhJAJI55sJBqZLM_wy3BwkSsRXq_CghKe74Cxbl95vi2KuvJl00nFdb9LNKVjxfa7W3gek77nf9lMN4ZuU5mf2pJvXyqvCGfCnnrhdLtGTr5VNxMHT7E70aJQzaJ-Kxl6FHP4KQ00hhLi107zu8kLwzIj8z1vjuSZG1gWNFYeQ_0TUOR7b_QhKoORrbctaEWI2zDMY2DgRBaubNHzeclvDvl9izN8aZnbHNfJrosNysGya6nd-8eTymrqGeGZAXhdxKa-AIrqQHAPTcYODEbuzE5ItDJwwdHcyMlJUD0W-8dQSddnO-Vh9cJ04H6ESr4uSxfQ3DSf_uUXDIpmR9fah3wqeVz7XkV8L0ag0L_Ing2PXK3Tk9ZRTowqokfD8roGVSv0rXkBvaGbdvnnpw0gb-O95Wd1H4nPBIpn5HcssD4ZwgAPCS_1QUTj8mx3oabmfBuQZzyOV57U44Q28M8p-VehDO0U_c-HZ-LE423NJYaKXvaAVfJptGwT2wQJFaPMYKsQkdkYtL4Xi8-lFPUwCWqDuvfoo5yTH7NAUKX1a9gRI56xcgh3rZorYGXb7Vw1_SlOeRwNDuwfUdV54dQIyukuxLoG2NWUYXUqbTsJIXvqXxGvGv3qOhgOJ_6sZiZKbf6OkE_8hEKEmnc6sTzy0PQPWYbOvaHu-F_38KSvnyufZeYCiYth11NvAyoTGpVoCWl9AdP90gPVw15ihztC-5gmTq7yZdXhjFdYl9Fk3dl4Apuy34A9GbkNhjM_rjxNvHtvnuowbk9R0bKijj0LQKw">Targetted minimum loss based estimation</a>></li>
+            <li><a class="ext" href="https://econml.azurewebsites.net/spec/estimation/dr.html">Doubly robust learning</a></li>
+            <li><a class="ext" href="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://watermark.silverchair.com/kxz042.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAtswggLXBgkqhkiG9w0BBwagggLIMIICxAIBADCCAr0GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMiwE2F0xraZrG-U9LAgEQgIICjnQYE-ihiKqhjwGSIsl6-je11Cst4bUYpo6zWUoHBJQAORHyVuR-es86CuAcmST1wB9Fvhu4NaB8MgSr81LhJAJI55sJBqZLM_wy3BwkSsRXq_CghKe74Cxbl95vi2KuvJl00nFdb9LNKVjxfa7W3gek77nf9lMN4ZuU5mf2pJvXyqvCGfCnnrhdLtGTr5VNxMHT7E70aJQzaJ-Kxl6FHP4KQ00hhLi107zu8kLwzIj8z1vjuSZG1gWNFYeQ_0TUOR7b_QhKoORrbctaEWI2zDMY2DgRBaubNHzeclvDvl9izN8aZnbHNfJrosNysGya6nd-8eTymrqGeGZAXhdxKa-AIrqQHAPTcYODEbuzE5ItDJwwdHcyMlJUD0W-8dQSddnO-Vh9cJ04H6ESr4uSxfQ3DSf_uUXDIpmR9fah3wqeVz7XkV8L0ag0L_Ing2PXK3Tk9ZRTowqokfD8roGVSv0rXkBvaGbdvnnpw0gb-O95Wd1H4nPBIpn5HcssD4ZwgAPCS_1QUTj8mx3oabmfBuQZzyOV57U44Q28M8p-VehDO0U_c-HZ-LE423NJYaKXvaAVfJptGwT2wQJFaPMYKsQkdkYtL4Xi8-lFPUwCWqDuvfoo5yTH7NAUKX1a9gRI56xcgh3rZorYGXb7Vw1_SlOeRwNDuwfUdV54dQIyukuxLoG2NWUYXUqbTsJIXvqXxGvGv3qOhgOJ_6sZiZKbf6OkE_8hEKEmnc6sTzy0PQPWYbOvaHu-F_38KSvnyufZeYCiYth11NvAyoTGpVoCWl9AdP90gPVw15ihztC-5gmTq7yZdXhjFdYl9Fk3dl4Apuy34A9GbkNhjM_rjxNvHtvnuowbk9R0bKijj0LQKw">Targetted minimum loss based estimation</a>></li>
         </ol>
         
         <h3>How DML allows causal inference and machine learning to mix </h3>
@@ -403,9 +403,9 @@ layout: default
         
         <h3>Other resources</h3>
         <ul>
-            <li><a href="https://towardsdatascience.com/double-machine-learning-for-causal-inference-78e0c6111f9d">This blog post on DML</a></li>
-            <li>I liked <a hreaf="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://scholar.princeton.edu/sites/default/files/bstewart/files/felton.chern_.slides.20190318.pdf">these slides</a> so much I risked the social humilation that comes with liking a twitter post from years ago to show my support</li>
-            <li href="https://docs.doubleml.org/stable/guide/basics.html#overcoming-regularization-bias-by-orthogonalization">DoubleML github (see this for code to exactly replicate the figures in the paper)</li>
+            <li><a class="ext" href="https://towardsdatascience.com/double-machine-learning-for-causal-inference-78e0c6111f9d">This blog post on DML</a></li>
+            <li>I liked <a class="ext" hreaf="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://scholar.princeton.edu/sites/default/files/bstewart/files/felton.chern_.slides.20190318.pdf">these slides</a> so much I risked the social humilation that comes with liking a twitter post from years ago to show my support</li>
+            <li class="ext" href="https://docs.doubleml.org/stable/guide/basics.html#overcoming-regularization-bias-by-orthogonalization">DoubleML github (see this for code to exactly replicate the figures in the paper)</li>
         </ul>
         
         <h3>References</h3>
