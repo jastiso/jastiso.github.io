@@ -10,7 +10,7 @@
     <div class="card">
       <h2>Double/debiased machine learning</h2>
       <h5>Light- to medium-math exaplaination of the method with tutorials, June 10, 2021</h5>
-      <img src="dml/dallerhinos.png" class="fakeimg" style="height:200px;" alt="Image of two rhinos, each with thie rown laptop, in the style of Henri Rausseau (curtosy of DALLE mini)"></img>
+      <img src="dml/dml_bird.jpg" class="title_img" alt="A photograph of two wading birds, facing opposite directions. Taken with a vintage Nikon 300mm lens"></img>
       <p>
 
         <h3>What is double machine learning</h3>
@@ -26,7 +26,7 @@
         learning to suggest treatments or interventions. DML presents one path forward. 
         I had mentioned previously that DML assumes a particular causal structure in your data, and therefore a particular type of problem. We can illustrate that struvture like this:
         
-        <img src="dml/causal_diag.png" class="fakeimg" style="height:200px;" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
+        <img src="dml/causal_diag.png" class="post_img" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
         
         Here, Y is some clinical outcome of interest (risk of disease, probability of diagnosis, etc.). T is some treatment or intervention. X is all the
          demographic, medical features of the patients. This diagram is illustrating that the treatment will influence the risk of disease, and that features of the
@@ -100,7 +100,7 @@
         
         This equation is essentially formalizing the graph we had displayed earlier.
         
-        <img src="dml/causal_diag.png" class="fakeimg" style="height:200px;" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
+        <img src="dml/causal_diag.png" class="post_img" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
         
         These equations are a useful example because they give us a specific functional form for how $T$ affects $Y$ ($T \times \theta_0$). Since this relationship is linear,
         it makes some of the math a little bit nicer. In the end, we want DML to work for more than just this specific situation, but this definition is useful for now. 
@@ -186,7 +186,7 @@
 
         If we repeat this process 200 times, we can genereate a histogram of our error term and see how well we did.
          
-         <img src="dml/nocf_noorth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on 25, ranging from about 20 to 30"></img>
+         <img src="dml/nocf_noorth.png" class="post_img" alt="A blue histogram of treatment estimation errors centered on 25, ranging from about 20 to 30"></img>
         
          If our estimate is good, we would expect the normalized difference between our estimate of $\theta$ and the real theta to
          be centered on 0.
@@ -267,7 +267,7 @@
 
         If we plot a similar histogram over 200 simulations we'll get something like this:
         
-         <img src="dml/nocf_orth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on -8, ranging from about -12 to -4"></img>
+         <img src="dml/nocf_orth.png" class="post_img" alt="A blue histogram of treatment estimation errors centered on -8, ranging from about -12 to -4"></img>
 
         And we have greatly reduced (but not eliminated) our bias!
 
@@ -389,7 +389,7 @@
 
         Using this process, we can correct the bias in our estimation
 
-        <img src="dml/cf_orth.png" class="fakeimg" style="height:200px;" alt="A blue histogram of treatment estimation errors centered on 0.05, ranging from about -0.3 to 0.4"></img>
+        <img src="dml/cf_orth.png" class="post_img" alt="A blue histogram of treatment estimation errors centered on 0.05, ranging from about -0.3 to 0.4"></img>
         
         Now we have a pretty good estimate! So far, we've gone over what the DML method is, and how is overcomes biases from regularization and overfitting to get good estimates of $\theta$ without making strong assumptions about the form of the data. We didn't go over here, but it is also possible to calculate confidence intervals for these estimates, which are neccessary for applications to clinical contexts. Now I'll show you how to apply it.
          
@@ -410,18 +410,186 @@
         </p>
     </div>
 
-    <div class="card">
+    <!--div class="card">
       <h2>How many roads must a random walker walk down before it gets out of Reykjavik?</h2>
       <h5>Analyzing your Google location history and biased random walkers on street graphs (in Python), July 25, 2022</h5>
-      <div class="fakeimg" style="height:200px;">Image</div>
+      <img src="map/iceland_road.jpg" class="title_img" alt="A photograph of a road in Iceland. The road stretched off into rolling green hills. A glacier can be seen in the distance"></img>
       <h3>Google location data as introspection</h3>
+        I spent a good part of my PhD learning about how people explore spaces. I specifically was interested in abstract spaces, where distances in these spaces map on to the similarity of some set of items. These items could be emotions, objects, school subjects, birds, or anything else you want. It turns out lots of 
+        the theories how how humans learn and explore abstract spaces also hold water when examining how we or other animals explore physical spaces. These cross domain theories felt very satisfying to me; it seemed like they might be revealing something important about our behavior. 
 
-      <h3>Visualizing your paths through cities</h3>
-      <h4>Using the python packages OSMNX and networkX</h4>
+        I wanted to take some of my knowledge of exploration, as well penchant for leanring new data vis methods, to learn something about my own exploration style through physical space. What sorts of cost functions might I have in mind when traveling? How well have I really explored my city? How much am I driven by novelty, or familiarity?
+        This blog post will answer none of these questions. But it will go through the steps I took to learn things fundamental to answering these questions: the structure of Google maps location data, how to analyze road networks and implement random walks in Python. Along the way, we'll answer a much simpler and more pointless question: does my vacation to Iceland bear any qualitative similarity toa biased random walker?
+      
+        <h4>Getting your Google location data</h4>
+        I'm going to use my own Google location data to visualize my path through Iceland. I followed these steps to download the data.
 
-      <h3>Biased random walkers</h3>
-      <h4>Levy flights and novelty prioritization</h4>
-    
+        The data comes with two types of files, a more information rich folder called XX, and a sparser .csv called XX. We're working with the .csv here. The important features of this .csv are latitudes and longitudes, as well as time stamps. 
+        Coordinates will be mapped to publically available road networks using the package OSMNX, and timestapm will be used to order travel and filter data.
+
+        We can get rid of all the extra columns and clean up the ones we want like so:
+        
+        <pre><code class="python">
+        import pandas as pd
+        import json
+
+        # load
+        with open('YOUR_PATH_TO_DATA/Takeout/Location History/Records.json') as data_file:    
+            data = json.load(data_file)
+        df = pd.json_normalize(data, 'locations')
+       
+        # get only relevant variables
+        df = df[['latitudeE7', 'longitudeE7', 'timestamp']]
+        
+        # tranform them to be useful
+        df.timestamp = pd.to_datetime(df.timestamp)
+        df = df.assign(
+            lat=df['latitudeE7']/1e7,
+            long=df['longitudeE7']/1e7,
+            year=df['timestamp'].dt.year,
+            month=df['timestamp'].dt.month,
+            day=df['timestamp'].dt.day,
+            dow=df['timestamp'].dt.day_name(),
+            time=df['timestamp'].dt.time,
+        )
+
+        </code></pre>
+
+        As a quick validity check, let's use the OSMNX package to visualize all our different coordinates. Google has data on me since 2012, so this plot should include most of travels over the past decade.
+
+        <pre><code class="python">
+        import geopandas as gpd
+        from shapely.geometry import Point
+        import matplotlib.pyplot as plt
+
+        # set up data structure of coordinates
+        geo = [Point(xy) for xy in zip(df.long, df.lat)]
+        gdf = gpd.GeoDataFrame(df, geometry=geo)
+
+        # plot
+        world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+        gdf.plot(ax=world.plot(figsize=(14,14), color='lightgrey'), color="#7397CB")
+        </code></pre>
+        <img src="map/all_map.png" class="post_img" alt="A map of the world scattered with dark blue dots. Most dots are concentrated on the costs of the US, though some dots are seen in Australia, Morocco, Sri Lanka, Iceland, DUbai, and other countries."></img>
+
+        Looks right to me! Now we're going filter down to the specific week where I was in Iceland
+        <pre><code class="python">
+        st =  '2017-07-31'
+        en = '2017-08-07'
+        iceland = df[(df['timestamp'] >= st) & (df['timestamp'] <= en)]
+
+        # remove duplicate lat/long pairs
+        iceland = iceland.drop_duplicates(subset=['lat', 'long', 'day', 'month'])
+        </code></pre>
+
+        Now that we have the data we'll be working with, we're ready to move on to working with road networks.
+      
+        <h3>Visualizing your paths through road networks</h3>
+        We'll be using two packages to help visualize my path through Iceland: OSMNX, and networkX. OSMNX has data about road maps for most of the world. networkX allows us to use intuitive graph data structures to get information about the road networks. Both of these packages leverage some ideas and terminology from graph theory that we're going to go over before starting.
+        
+        A network is a representation of system of two or more separable units (caled nodes) and the interactions between them (called edges). Visually, nodes are often depicted as circles, with edges between them depicted as lines. In our case, edges are going to be roads, and nodes are any intersections or decision points in those roads.
+        
+        First, we're going to get a graph representation of Iceland's roads
+        <pre><code class="python">
+        import osmnx as ox
+
+        ox.config(log_console=True, use_cache=True)
+        # location where you want to find your route
+        place     = 'Iceland'
+        # find shortest route based on the mode of travel
+        mode      = 'walk'        # 'drive', 'bike', 'walk'
+        # find shortest path based on distance or time
+        optimizer = 'length'        # 'length','time'
+        # create graph from OSM within the boundaries of some 
+        # geocodable place(s)
+        graph = ox.graph_from_place(place, network_type = mode)
+        </code></pre>
+
+        We can see this graph has nodes and edges that we can access with networkX
+
+        <pre><code class="python">
+        import networkx as nx
+        </code></pre>
+        Our strategy for plotting my actual trajectory on this graph is as follows: get a starting coordinate; snap it to the closest spot on the road network; repeat for the next coordinate; get the shorted path between the start and end coordinate. We can then repeat this for every corrdinate to get one long path through Iceland.
+        
+        We can code up this strategy as follows:
+        <pre><code class="python">
+        route = []
+        start_latlng = (iceland['lat'].values[0],iceland['long'].values[0])
+        # find the nearest node to the start location
+        orig_node = ox.get_nearest_node(graph, start_latlng)
+        for i in range(len(iceland) - 1):
+            # define the start and end locations in latlng
+            end_latlng = (iceland['lat'].values[i+1],iceland['long'].values[i+1])
+            # find the nearest node to the end location
+            dest_node = ox.get_nearest_node(graph, end_latlng)
+            #  find the shortest path
+            route.extend(nx.shortest_path(graph,
+                                    orig_node,
+                                    dest_node,
+                                    weight=optimizer))
+            # advance to the next step
+            orig_node = dest_node
+        </code></pre>
+
+        And then plot it
+        <pre><code class="python">
+        from itertools import groupby 
+
+        # remove any dup;licates from the route - these cause the shortest path algorithm to break
+        route = [i[0] for i in groupby(route)]
+        fig, ax = ox.plot_graph_route(graph,
+                                        route,
+                                        node_size=0,
+                                        edge_linewidth=2,
+                                        edge_color='grey',
+                                        route_color="#EB8D43",
+                                        route_alpha=0.9,
+                                        orig_dest_size=0)
+        </code></pre>
+        <img src="map/my_path.png" class="post_img" alt="A black background, with the all the roads in iceland plotted in dark grey. An orange line traces my path through the country."></img>
+
+        And here we have a nice visiualization of my vacation. While I did travel through most parts of the country, the path I took is very directed. No one area has dense coverage and the path mostly sticks to the coast.
+        
+        These observations make sense given what I wanted to get out of the trip. I wanted to see as much of the country as possible in the week I was there. I also had prebooked accomodations in different cities for every night, which didn't allow me to wander or dwell in any one area. 
+
+        How could this have looked different? What if I had showed up to Iceland and just wandered the streeets of Reykjavik, turning randomly whenever I felt like it? What I turned mostly randomly, but had a few goals in mind that I was trying to optimize? What if I wandered randomly, but then at somepoint drove to new, further away location so that I could wander there?
+        <h3>Biased random walkers</h3>
+        All of these strategies can coded up by imagining some agent who stands on a given node, and iteratively 'walks' to other connected nodes based on some rules. The rules are called 'biases', and often times even simple biases can sometimes lead to agents with behaviors that closely mimic real world behaviors. Even when they don't, they can identify how much of the variance in a behavior is explained by simple rules and help better identify which features we don't yet understand. We'll go over a few examples below
+
+        <h4>Levy flights and novelty prioritization</h4>
+        One ocool algorithm for generating walks is called a Levy flight. It is characterized by walkers who stay mostly in the local neighborhood, but occasionally make big jumps to far away nodes on the graph. These walks model animal foraging behavior, as well as the wikipedia exploration of some people.
+        Practically, this is accomplished by haveing a random walker with a varying step size. The step size is drawn from an expoenetially decaying distribution, such that most steps will be small, but a few will be larger.
+
+        Coding the Levy flight relies on two parameters, one that determines the steepenss of the exponential distribution (\(c\)) and one that determines the maximum step size (\(d)\)
+        <pre><code class="python">
+        # get decaying distribution of step sizes
+        c = 1 # controls steepness of decay
+        d = 5000 # max step size
+        n = len(iceland)
+        x = np.arange(1, d+1, 1)  # set upper bound for step size
+        pdfLevy = np.power(1/x, c)  # set u value, where 1 <= c <= 3
+        pdfLevy = pdfLevy/sum(pdfLevy)
+        optimizer = 'length'
+        mode = 'walk'
+        
+        # intialize
+        start_latlng = (iceland['lat'].values[i],iceland['long'].values[i])
+        orig_node = ox.get_nearest_node(graph, start_latlng)
+        levy_route = [orig_node]
+        </code></pre>
+
+        We can then use these parameters to get a walk through the streets of Iceland similarly to what we did before. However, now instead of getting the successive nodes from the Google location data, we'll be getting them from the graph of Iceland itself.
+        <pre><code clas="python">
+        
+        </code></pre>
+        <img src="map/levy.png" class="post_img" alt="A black background, with the all the roads in iceland plotted in dark grey. A gold line traces a Levy flight through the country."></img>
+        This algorithm looks a lot different from my path! It doesn't see the whole country, but the parts it does see it explores much more densely. Maybe part of the reason why this walk looks so different is that it tends to get stuck in cities or other densely connected areas. It might visit these streeets many times before it happens to stumble out.
+
+        We can add biases to this walk algorithm to make it less likely to revisit nodes that its already been too. This is accomplished by adding an additional parameter (\(r\)) that sets the relative probability of revisiting nodes already in the path versus visiting new ones.
+        <pre><code clas="python">
+        
+        </code></pre>
     </div>
     
  <!---   <div class="card">
