@@ -18,52 +18,56 @@ layout: default
       <p>
 
         <h3>What is double machine learning</h3>
-        To me -- and potentially, <a href="https://youtu.be/eHOjmyoPCFU?t=110"> its creator </a>-- Double Machine Learning sounds like a trendy name you would give a method to try to sound impressive in developer spaces. Double (or debiased) machine learning is actually a way to esetimate causal effects in large, complex data that have a specific causal structure. Previously many causal 
-        modeling methods relied on assuming a specific form of the data rather than learning it - namely that varialbes were normally distibuted and linearly related to eachother. Additionally, these methods don't allow for complex data, or data where the entropy of the parameter space increases with increasing observations (in otherwords - most large, modern datasets). Combined, these features made causal inference difficult to apply to realworld problems.
-        Double machine learning (DML) allows causal inference to coexist with complex data with few assumptions, which has drummed up a lot of well deserved excitement about the method (primarily in economics). 
-        When I was trying to learn more about the method, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there had a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations. This is the info I wish I had when I was learning. 
-        This post focuses on understanding how the DML algorthim works. I hop later to do a post on its application, but for now there are some good tutorial <a href="https://econml.azurewebsites.net/spec/estimation/dml.html">here.</a>
+        To me -- and potentially, <a href="https://youtu.be/eHOjmyoPCFU?t=110"> its creator </a>-- Double Machine Learning sounds like a trendy name you would give a method to try to sound impressive in developer spaces. Double (or debiased) machine learning is actually a way to esetimate specific causal effects in large, complex data [1]. Previously many causal 
+        modeling methods relied on assuming a specific form of the data rather than learning it - namely assuming that varialbes were normally distibuted and linearly related to eachother. In addition to these faulty assumptions, these methods don't allow for complex data where the entropy of the parameter space increases with increasing observations (in otherwords - most large, modern datasets). Combined, these features made causal inference difficult to apply to realworld problems.
+        
+        
+        A method called double machine learning (DML) allows causal inference to coexist with complex data with few assumptions, which has drummed up a lot of well deserved excitement about the method (primarily in economics). 
+        When I was trying to learn more about DML, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there took a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations.  
+        This post focuses on understanding how the DML algorthim works. I hope later to do a post on its application, but for now I'll point people to this <a href="https://econml.azurewebsites.net/spec/estimation/dml.html">tutorial</a>.
 
         
-        <h4>what clinical problems can DML be used for?</h4>
-        The adoption of this methods aligns nicely with some new trends in clinical informatics (my current field). Clinical machine learning projects have made a major push towards building risk or diagnostic models. Less attention has been devoted to using
-        learning to suggest treatments or interventions. DML presents one path forward. 
-        I had mentioned previously that DML assumes a particular causal structure in your data, and therefore a particular type of problem. We can illustrate that struvture like this:
+        <h4>What clinical problems can DML be used for?</h4>
+        The creation of this methods aligns nicely with some trends in clinical informatics (my current field). Clinical machine learning projects have made a major push towards building risk or diagnostic models. Less attention has been devoted to using
+        machine learning to suggest treatments or interventions. DML presents one path forward - for a particular causal structure. 
+        We can illustrate that structure like this:
         
         <img src="dml/causal_diag.png" class="post_img" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
         
         Here, Y is some clinical outcome of interest (risk of disease, probability of diagnosis, etc.). T is some treatment or intervention. X is all the
-         demographic, medical features of the patients. This diagram is illustrating that the treatment will influence the risk of disease, and that features of the
-         patient will influence both the risk and which/whether treatments will be given. Broadly, the goal is to estimate the size of the arrow connecting T and Y
-          (referred to now as the treatment effect). Specifically, we want that estimation to:
+         relevant demographic, medical and social features of the patients. This diagram is illustrating that the treatment will influence the risk of disease, and that features of the
+         patient will influence both the risk and which/whether treatments will be given. When clinician are decising which treatments to give, it would be helpful to know the size of the arrow connecting T and Y
+          (referred to now as the treatment effect). Specifically, we'd want the estimation of the treatment effect to:
         <ol>
               <li> be accurate with a lot of data (might seem obvious, but this is harder than it sounds)</li>
-              <li>come with confidence intervals</li>
+              <li> come with confidence intervals</li>
               <li> not make strict assumptions about the form of the data (leverage machine learning)</li>
         </ol>
-         
+        
+        A method that provides these kinds of treatment effect estimates could prove to be a powerful tool for clinical bioinformatics moving forward.
         
         <h4>DML's solution</h4>
         These points have historically been hard to acheive because methods for 'good' causal estimates typically do not give us point 3, and methods of machine
          learning typically do not give us point 1 (and sometimes 2). Machine learning models do not give good causal estimates for 2 reasons:
          <ol>
             <li>Regularization, necessary for fitting complex data, induces a bias (think bias variance trade-ff). To reduce overfitting, analysts using machine learning methods often use 
-                regularization. If you're familiar with LASSO or RIDGE regression, this is a classic example of using regularization. However, this necessarily 
+                regularization. However, this necessarily 
                 increases the bias of estimates.</li>
-            <li>Despite our best efforts, machine learning tends to overfit data, further biasing results.
-                DML can remove those two sources of bias and give us an estimate of the treatment effect and all of the extra points outlined above. At a high level, 
+            <li>Despite our best efforts, machine learning models fit on data that follow the causal diagram above tend to overfit data, further biasing results.</li>
+         </ol>
+
+         DML can remove those two sources of bias and give us an estimate of the treatment effect and all of the extra points outlined above. At a high level, 
                 these biases are alleviated by fitting two separate machine learning models (thus the name) to estimate the effect of X on Y and T, and then solving for
                 theta using the residuals of those estimates (more details on this below). Additionally, there are now some pretty good packages implementing DML 
-                in python that play nicely with scikit learn. All together making it a desireable new method for applied scientists, and motivating me to give it a try. </li>
-         </ol>
+                in python that play nicely with scikit learn. All together, making it a desireable new method for applied scientists, and motivating me to give it a try.
         
-        <h4>caveats and alternatives</h4>
+        <h4>Caveats and alternatives</h4>
         Like all methods, DML comes with important assumptions and caveats. 
         Assumptions (most of these are true of many causal methods):
         <ol>
             <li>Consistency - An individual's potential outcome under thier observed exposure history is precisely their observed outcome.</li>
             <li>Positivity - Everyone in the study has some probability of receiving treatment</li>
-            <li>You are recording all variables that influence Y and T in X. I think this is the most fraught assumption in medical contexts (REF).</li>
+            <li>You are recording all variables that influence Y and T in X. I think this is the most fraught assumption in medical contexts [2].</li>
         </ol>
 
         Caveats:
@@ -74,17 +78,15 @@ layout: default
         
         Alternatives
         <ol>
-            <li>Doubly robust learning</li>
-            <li>TLME</li>
+            <li><a href="https://econml.azurewebsites.net/spec/estimation/dr.html">Doubly robust learning</a></li>
+            <li><a href="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://watermark.silverchair.com/kxz042.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAtswggLXBgkqhkiG9w0BBwagggLIMIICxAIBADCCAr0GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMiwE2F0xraZrG-U9LAgEQgIICjnQYE-ihiKqhjwGSIsl6-je11Cst4bUYpo6zWUoHBJQAORHyVuR-es86CuAcmST1wB9Fvhu4NaB8MgSr81LhJAJI55sJBqZLM_wy3BwkSsRXq_CghKe74Cxbl95vi2KuvJl00nFdb9LNKVjxfa7W3gek77nf9lMN4ZuU5mf2pJvXyqvCGfCnnrhdLtGTr5VNxMHT7E70aJQzaJ-Kxl6FHP4KQ00hhLi107zu8kLwzIj8z1vjuSZG1gWNFYeQ_0TUOR7b_QhKoORrbctaEWI2zDMY2DgRBaubNHzeclvDvl9izN8aZnbHNfJrosNysGya6nd-8eTymrqGeGZAXhdxKa-AIrqQHAPTcYODEbuzE5ItDJwwdHcyMlJUD0W-8dQSddnO-Vh9cJ04H6ESr4uSxfQ3DSf_uUXDIpmR9fah3wqeVz7XkV8L0ag0L_Ing2PXK3Tk9ZRTowqokfD8roGVSv0rXkBvaGbdvnnpw0gb-O95Wd1H4nPBIpn5HcssD4ZwgAPCS_1QUTj8mx3oabmfBuQZzyOV57U44Q28M8p-VehDO0U_c-HZ-LE423NJYaKXvaAVfJptGwT2wQJFaPMYKsQkdkYtL4Xi8-lFPUwCWqDuvfoo5yTH7NAUKX1a9gRI56xcgh3rZorYGXb7Vw1_SlOeRwNDuwfUdV54dQIyukuxLoG2NWUYXUqbTsJIXvqXxGvGv3qOhgOJ_6sZiZKbf6OkE_8hEKEmnc6sTzy0PQPWYbOvaHu-F_38KSvnyufZeYCiYth11NvAyoTGpVoCWl9AdP90gPVw15ihztC-5gmTq7yZdXhjFdYl9Fk3dl4Apuy34A9GbkNhjM_rjxNvHtvnuowbk9R0bKijj0LQKw">Targetted minimum loss based estimation</a>></li>
         </ol>
         
         <h3>How DML allows causal inference and machine learning to mix </h3>
-        We're now going to describe the method in more detail than the above summary. The goal here is to hit the major points of the DML paper (REF) restructured
-        for a more applied audience. I found these points difficult to work through on my own (thus the blog post). However if you're satisfied with the above description,
-        skip to the code example.
-
+        We're now going to describe the method in more detail than the above summary. The goal here is to hit the major points of the DML paper [1] restructured
+        for a more applied audience. 
         
-        <h4>direct method</h4>
+        <h4>Direct method</h4>
         To formalize the problems and solutions discussed above, we're going to have to be more mathematically precise with our definitions. We're going to start by
         defining a specific formula for generating data. 
         
@@ -106,9 +108,9 @@ layout: default
         
         <img src="dml/causal_diag.png" class="post_img" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
         
-        These equations are a useful example because they give us a specific functional form for how $T$ affects $Y$ ($T \times \theta_0$). Since this relationship is linear,
+        These equations are a useful example because they give us a specific functional form for how \(T\) affects \(Y\) (\(T \times \theta_0\)). Since this relationship is linear,
         it makes some of the math a little bit nicer. In the end, we want DML to work for more than just this specific situation, but this definition is useful for now. 
-        If we were to code up these relationships in python, it would look something like this. Note that to code this up we have to pick a specific $g_0(X)$ and $m_0(X)$. It could be whatever you want, but here we're using some exponential sums of the first few columns of X (I picked this because that's what the original paper does).
+        If we were to code up these relationships in python, it would look something like this. Note that to code this up we have to pick a specific \(g_0(X)\) and \(m_0(X)\). It could be whatever you want, but here we're using some exponential sums of the first few columns of X (I picked this because that's what the original paper does).
         
         <pre><code class="python"> 
         from scipy.linalg import toeplitz
@@ -138,7 +140,7 @@ layout: default
             return x, y, t        
         </code>></pre>
         
-        Let's imagine you're given some X, T, and Y data by your emploter, as well as the data generating equations above. You're then asked to estimate what theta is. 
+        Let's imagine you're given some X, T, and Y data, as well as the data generating equations above. You're then asked to estimate what theta is. 
         One first attempt might be to build one machine learning model of \(T\theta_{0} + g_{0}(X)\) and \(g_0(X)\), then regress out \(T\) to solve for \(\theta_0\).  
         
         This is a little tricky because \(g_0(X)\) is not the influence of \(X\) on \(Y\), its the influence of \(X\) on the part of \(Y\) that isnt influenced by \(T \times \theta_0\). Therefore we have to do this iteratively: get an initial guess for \(\theta_0\) in order to estimate \(g_0(X)\); then use that estimate of \(g_0(X)\) to solve for \(\theta_0\).
@@ -172,7 +174,7 @@ layout: default
          g_hat = ml_g.predict(x)
          </code>></pre>
 
-        Lastly, we can regress the effect of T our from our prediction
+        Lastly, we can regress the effect of \(T\) our from our prediction
         <pre><code class="python"> 
         # compute residuals
         u_hat = y - g_hat
@@ -192,14 +194,14 @@ layout: default
          
          <img src="dml/nocf_noorth.png" class="post_img" alt="A blue histogram of treatment estimation errors centered on 25, ranging from about 20 to 30"></img>
         
-         If our estimate is good, we would expect the normalized difference between our estimate of $\theta$ and the real theta to
+         If our estimate is good, we would expect the normalized difference between our estimate of \(\theta\) and the real theta to
          be centered on 0.
 
         This histogram shows that is not the case. Our estimate is way off and centered on a positive value. What went wrong?
         
-        At a high level, part of what went wrong is that we did not explicitly model the effect of X on T. That influence is biasing our estimate. 
+        At a high level, part of what went wrong is that we did not explicitly model the effect of \(X\) on \(T\). That influence is biasing our estimate. 
         Illustrating this explicitly is where our partially linear data generating process comes in handy. We can write out an equation for the error in our estimate.
-        As a reminder, the goal here would be for the left hand side to converge to 0 as we get more data.
+        The goal here would be for the left hand side to converge to 0 as we get more data.
 
          <h4>regularization bias</h4>
 
@@ -208,13 +210,13 @@ layout: default
         <ul>
             <li>The left hand side is our scaled error term - what we want to go to 0</li>
             <li style="color:#9b6981">Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0</li>
-            <li style="color:#7887a4">This term is where the problem is. Our estimate error is never going to be 0, and won;t quite be cenmtered on 0. This because of the deal we make as 
+            <li style="color:#7887a4">This term is where the problem is. Our estimate error is never going to be 0. This because of the deal we make as 
                 data scientists working with complex data. Reduce the varaince (overfitting) of our machine learning model, we induce some bias in our estimate (often through 
-                regularization). Additionally, T depends on X, and therefore also will not converge to 0. Because of this, g-g_hat times T will be small, but not zero. 
+                regularization). Additionally, \(T\) depends on \(X\), and therefore also will not converge to 0. Because of this, \(g_0-\hat{g} \times T\) will be small, but not 0. 
                 It will be divided by a large number, and will converge to 0 eventually, but too slowly to be practical. </li>
         </ul>
         
-        We have to remove the effect of X on T to circumvent this bias. We can do this in three steps:
+        We have to remove the effect of \(X\) on \(T\) to circumvent this bias. We can do this in three steps:
         <ol>
             <li>Estimate \(T\) from \(X\) using ML model of choice (different from the direct method!)</li>
             <li> Estimate \(Y\) from \(X\) using ML model of choice</li>
@@ -223,7 +225,7 @@ layout: default
 
         We can write out a new error equation like so:
         
-        \(\sqrt{n}(\hat{\theta_0} - \theta_0) =\)<span style="color:#023743">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i\)</span> \(+)\ <span style="color:#021743">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i))\)</span> \(+ ...  \)
+        \(\sqrt{n}(\hat{\theta_0} - \theta_0) =\)<span style="color:#023743">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i\)</span> \(+\) <span style="color:#021743">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i))\)</span> \(+ ...  \)
        
         <ul>
             <li>The left hand side is the same as before</li>
@@ -253,7 +255,7 @@ layout: default
         g_hat = ml_g.predict(x)
         </code>></pre>
 
-        Similarly, when we get our finalt estmimate for \(\theta\)
+        Similarly, when we get our final estmimate for \(\theta\)
         <pre><code class="python">    
          # compute residuals
          u_hat = y - g_hat
@@ -275,12 +277,12 @@ layout: default
 
         And we have greatly reduced (but not eliminated) our bias!
 
-        For this specific data generating process, we now have a way of estimating theta without regularization bias! However I mentioned earlier that we want to be 
+        For this specific data generating process, we now have a way of estimating \(\theta\) without regularization bias! However I mentioned earlier that we want to be 
         able to estimate more than only this process. In particular, step three involves linear regression, and only works in our partially linear example. How do
-         we generalize the method of estimating theta?
+         we generalize the method of estimating \(\theta\)?
          
          The least squares solution for linear relationships esentially finds the parameters for a line that minimizes the error between the predicted points on 
-         the line, and the observed data. We can wrote this as the minimization of a cost function of our data and true parameters
+         the line, and the observed data. We can write this as the minimization of a cost function of our data and true parameters
          
          $$ \psi(W; \theta, \eta) = 0 $$
          
@@ -291,7 +293,7 @@ layout: default
              <li> \(\theta\) is the true treatment effect</li>
              <li> \(\psi\) is just some cost function. We are purposely not defining it because we want this to be a general solution, but you can think of it as any kind of 
                 error minimization function</li>
-             <li> \(\eta\) is called the nuissance parameter, and here contains g and m</li>
+             <li> \(\eta\) is called the nuissance parameter, and here contains \(g\) and \(m\)</li>
          </ol>
 
          Solving minimization problems like these are often difficult and subject to noise. To assure we find a robust solution, we're going to add one other condition
@@ -299,13 +301,13 @@ layout: default
           
         $$ { \delta_{\eta}E[\psi(W; \theta, \eta][\eta - \eta_0] = 0} $$
          
-         Technically, this is a direction al Gateaux derivative. Practically, what this means is that we expect that the true value of theta would be robust to 
+         Technically, this is a direction al Gateaux derivative. Practically, what this means is that we expect that the true value of \(theta\) would be robust to 
          small purturbations in the nuissance parameters. This has the benefit of giving use estimates that will be stable in the presence of small changes to our
          ML models.
          
-         There are whole branches of mathematics dedidated to solving these tpyes of equations with moment conditions, and there is no single good solution. All the 
+         There are whole branches of mathematics dedidated to solving these types of equations with moment conditions, and there is no single good solution. All the 
          different solutions are called 'DML estimators'. Rather than getting into any specific estimator here, we're just going to trust that they exist, and move on.
-         We'll talk a little bit about a specific estimator in the example code section.
+         Whatever package you use to apply the method should give some information on the estimators it implements.
          
          We now have a more generalizable set of steps
          <ol>
@@ -317,15 +319,15 @@ layout: default
          <h4>overfitting bias</h4>
         We now have a generalizable solution to regulatization bias. Additionally, with the definition of a cost function, we have a method of evaluating our DML
          estimator and comparing different models. Specifically, we can find the model that gives smallest value for our moment condition. The specific value of
-         this function is usually called a 'score' or 'Neyman orthogonality score', and the closer to 0 it is the better. We will use this value to perform model 
-        selection in the example later.
+         this function is usually called a 'score' or 'Neyman orthogonality score', and the closer to 0 it is the better. We would use this value to perform model 
+        selection when applying this method.
         
-        But first, it's time to revisit out error equation in the partially linear case.
+        Now, it's time to revisit out error equation in the partially linear case.
         
         $$ { \sqrt{n}(\hat{\theta_0} - \theta_0) = (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i + (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i)) + \frac{1}{\sqrt{n}}\sum_{i \in I}^{n}V_i(\hat{g_0}(X_i) - g_0(X_i)) } $$
         
-        We've discussed the first terms perviously, but I'm revealing the last term we had hidden previously.
-        * If any overfitting is present in \(\hat{g_0}\), the estimate will pick up some noise from the noise term. This will slow down the convergence of this new term to 0
+        We've discussed the first two terms already, but I'm revealing the last term we had hidden previously.
+        If any overfitting is present in \(\hat{g_0}\), the estimate will pick up some noise from the noise term \(U\). This will slow down the convergence of this new term to 0
         
         The solution to this bias is to fit \(g\) and \(m\) on a different set of data than the set used to estimate \(\theta\). Similar to how cross-validation avoids overfitting 
         during parameter selection, this method (called cross-fitting) avoids overfitting in out estimation of \(\theta\). This changes our DML steps slightly.
@@ -395,8 +397,9 @@ layout: default
 
         <img src="dml/cf_orth.png" class="post_img" alt="A blue histogram of treatment estimation errors centered on 0.05, ranging from about -0.3 to 0.4"></img>
         
-        Now we have a pretty good estimate! So far, we've gone over what the DML method is, and how is overcomes biases from regularization and overfitting to get good estimates of $\theta$ without making strong assumptions about the form of the data. We didn't go over here, but it is also possible to calculate confidence intervals for these estimates, which are neccessary for applications to clinical contexts. Now I'll show you how to apply it.
-         
+        Now we have a pretty good estimate! 
+        So far, we've gone over what the DML method is, and how is overcomes biases from regularization and overfitting to get good estimates of \(\theta\) without making strong assumptions about the form of the data. 
+        There are two packages (econML and DoubleML) that allow for applications of this method in Python and R. Hopefully this post made the method little more accessible or helped you assess if this method would be a good fit for your data.
         
         <h3>Other resources</h3>
         <ul>
@@ -406,10 +409,10 @@ layout: default
         </ul>
         
         <h3>References</h3>
-        <ul>
-            <li>Rose, S., & Rizopoulos, D. (2020). Machine learning for causal inference in Biostatistics. In Biostatistics (Oxford, England) (Vol. 21, Issue 2, pp. 336–338). NLM (Medline). https://doi.org/10.1093/biostatistics/kxz045</li>
+        <ol>
             <li>Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., & Robins, J. (2016). Double/Debiased Machine Learning for Treatment and Causal Parameters. http://arxiv.org/abs/1608.00060</li>
-        </ul>
+            <li>Rose, S., & Rizopoulos, D. (2020). Machine learning for causal inference in Biostatistics. In Biostatistics (Oxford, England) (Vol. 21, Issue 2, pp. 336–338). NLM (Medline). https://doi.org/10.1093/biostatistics/kxz045</li>
+        </ol>
        
         </p>
     </div>
