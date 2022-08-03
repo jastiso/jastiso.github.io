@@ -224,13 +224,14 @@ layout: default
         </ol>
 
         We can write out a new error equation like so:
+
         
-        \(\sqrt{n}(\hat{\theta_0} - \theta_0) =\)<span style="color:#023743">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i\)</span> \(+\) <span style="color:#021743">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i))\)</span> \(+ ...  \)
+        \(\sqrt{n}(\hat{\theta_0} - \theta_0) =\)<span style="color:#9b6981">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i\)</span> \(+\) <span style="color:#7887a4">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i))\)</span> \(+ ...  \)
        
         <ul>
             <li>The left hand side is the same as before</li>
-            <li>Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0</li>
-            <li>Now we have two small, non-0 numbers multiplied by eachother, divided by a large number. This will converge to 0 much more quickly than before </li>
+            <li><span style="color:#9b6981">Noise cancels out on average, so this term is a very small number, divided by a big number. Essentially 0</span></li>
+            <li> <span style="color:#7887a4">Now we have two small, non-0 numbers multiplied by eachother, divided by a large number. This will converge to 0 much more quickly than before</span> </li>
             <li> ... this method adds a new term that we're going to ignore for now. But it comes back later!</li>
         </ul>
         
