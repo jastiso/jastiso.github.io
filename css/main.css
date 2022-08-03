@@ -7,11 +7,11 @@ body {
     margin: auto;
 }
 
-.title_img {
+img.title_img {
     width:70%
 }
 
-.post_img {
+img.post_img {
     display: block;
     margin-left: auto;
     margin-right: auto;
