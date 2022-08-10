@@ -617,9 +617,9 @@ layout: default
                 <img src="map/random_10n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A gold line traces a random walk 10 times length of my vacation through the country. The walk is clustered around Reykjavik"></img>
             </div>
 
-        This algorithm looks a lot different from my path! It doesn't see the whole country, and infact never really gets far out of Reyykjavik, even if it takes 10 times more steps than I do. This isn't surprising given how much more densely connected streets are inside of cities than outside of them.
+        <p>This algorithm looks a lot different from my path! It doesn't see the whole country, and infact never really gets far out of Reyykjavik, even if it takes 10 times more steps than I do. This isn't surprising given how much more densely connected streets are inside of cities than outside of them.
         Once you're inside a city, more intersections will lead you into the city than out of it, leading to a spot where random walkers will tend to accumulate. Maybe if we try to to avoid intersections we've already seen, we can make sure that we get out of the city eventually.
-
+        </p>
         We can add biases to this walk algorithm to make it less likely to revisit nodes that its already been too. This is accomplished by adding an additional parameter (\(r\)) that sets the relative probability of revisiting nodes already in the path versus visiting new ones.
         <pre><code clas="python">
         r = 0.01
@@ -661,8 +661,8 @@ layout: default
                 <img src="map/bias_random_10n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A pink line traces a random walk 10 times length of my vacation through the country. The walk is clustered around Reykjavik"></img>
             </div>
 
-        This bias towards novelty does a little better. Now, we much more easily get out of the city, and even get to a different part of the island. But the areas it visits are still more densely explored than mine, and I stil get more coverage of the island as whole.
-
+        <p>This bias towards novelty does a little better. Now, we much more easily get out of the city, and even get to a different part of the island. But the areas it visits are still more densely explored than mine, and I stil get more coverage of the island as whole.
+        </p>
         There's a lot of ways we could build on this bias towards novelty to get more realistic looking walks. We culd add a bias towards popular locations, force the walk to start and stop at the airport, or give the walker global knowledge of the graph and tell it to navigate efficiently to specific landmarks. But for now we'll stop here, and appreciate the aesthetic differences in these few exploration styles.
 
         <h3>Other resources</h3>
