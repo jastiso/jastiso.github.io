@@ -422,14 +422,14 @@ layout: default
       <h2>How many roads must a random walker walk down before it gets out of Reykjavik?</h2>
       <h5>Analyzing your Google location history and biased random walkers on street graphs (in Python), August, 2022</h5>
       <img src="map/iceland_road.jpg" class="title_img" alt="A photograph of a road in Iceland. The road stretched off into rolling green hills. A glacier can be seen in the distance"></img>
-        I spent a good part of my PhD learning about how people explore spaces. I specifically was interested in abstract spaces, where distances in these spaces map on to the similarity between items. These items could be emotions, objects, school subjects, <a href="https://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC5248972&blobtype=pdf">birds</a>, or anything else you want. It turns out lots of 
+        I spent a good part of my PhD learning about how people explore spaces. I specifically was interested in abstract spaces, where distances in these spaces map on to the similarity between items. These items could be emotions, objects, school subjects, <a class="ext" href="https://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC5248972&blobtype=pdf">birds</a>, or anything else you want. It turns out lots of 
         the theories for how how humans learn and explore abstract spaces also hold water when examining how we or other animals explore physical spaces. These cross domain theories felt very satisfying to me; it seemed like they might at best be revealing something important about our behavior, and at worst showing cool convergent behavioral motifs. 
 
         I wanted to take some of my knowledge of exploration, as well penchant for leanring new data vis methods, to learn something about my own exploration style through physical space. What sorts of cost functions might I have in mind when traveling? How well have I really explored my city? How much are my paths driven by novelty, or familiarity?
         This blog post will answer none of these questions. But it will go through the steps I took to learn a few things that are fundamental to answering them: the structure of Google maps location data; and how to analyze road networks and implement random walks in Python. Along the way, we'll answer a much simpler and more pointless question: does my vacation to Iceland bear any qualitative similarity to a biased random walker?
       
         <h3>Google location data for exploration</h3>
-        I'm going to use my own Google location data to visualize my path through Iceland. I followed <a href="https://www.howtogeek.com/725241/how-to-download-your-google-maps-data/#:~:text=To%20download%20your%20data%2C%20head,%E2%80%9CDownload%20Your%20Maps%20Data.%E2%80%9D">these steps</a> to download the data.
+        I'm going to use my own Google location data to visualize my path through Iceland. I followed <a class="ext" href="https://www.howtogeek.com/725241/how-to-download-your-google-maps-data/#:~:text=To%20download%20your%20data%2C%20head,%E2%80%9CDownload%20Your%20Maps%20Data.%E2%80%9D">these steps</a> to download the data.
 
         The data come in two sets, a more information rich folder called <i>Semantic Location History</i>, and sparser json file called <i>Records</i> . We're working with only the Records data here. The important features of this data are latitudes and longitudes, as well as time stamps. 
         Coordinates will be mapped to publically available road networks using the package OSMnx, and timestamps will be used to order and filter data.
@@ -668,8 +668,8 @@ layout: default
         <h3>Other resources</h3>
         <ul>
             <li>This project was inspired by <a class="ext" href="https://twitter.com/IvaBrunec/status/1536141712426409985">this twitter post </a> by Dr. Iva Brunec</li>
-            <li>In addition to the documentation, this posts on <a class="ext" hreaf="https://towardsdatascience.com/visualization-in-python-finding-routes-between-points-2d97d4881996">OSMnx</a> was useful</li>
-            <li>Color scheme from <a href="https://github.com/katiejolly/nationalparkcolors">the Channel Islands</a></li>
+            <li>In addition to the documentation, this post on <a class="ext" hreaf="https://towardsdatascience.com/visualization-in-python-finding-routes-between-points-2d97d4881996">OSMnx</a> was useful</li>
+            <li>Color scheme from <a class="ext" href="https://github.com/katiejolly/nationalparkcolors">the Channel Islands</a></li>
         </ul>
     </div>
    <!---   <div class="card">
