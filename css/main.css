@@ -6,6 +6,15 @@ body {
     overflow: auto;
     margin: auto;
 }
+  
+.series_text {
+    display: inline-block;
+    text-align: center;
+}
+
+img.series_img {
+    display: block
+}
 
 img.title_img {
     width: 70%;

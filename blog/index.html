@@ -13,7 +13,7 @@ layout: default
   <div class="leftcolumn">
     <div class="card">
       <h2>Double/debiased machine learning</h2>
-      <h5>Light- to medium-math exaplaination of the method with tutorials, June 10, 2021</h5>
+      <h5>Light- to medium-math exaplaination of the method with tutorials, June, 2021</h5>
       <img src="dml/dml_bird.jpg" class="title_img" alt="Photograph of two wading birds, facing opposite directions (great blue heron and snowy egret). Photo taken with vintage 300mm Nikon lens"></img>
       <p>
 
@@ -418,25 +418,24 @@ layout: default
         </p>
     </div>
 
-    <!--div class="card">
+    <div class="card">
       <h2>How many roads must a random walker walk down before it gets out of Reykjavik?</h2>
-      <h5>Analyzing your Google location history and biased random walkers on street graphs (in Python), July 25, 2022</h5>
+      <h5>Analyzing your Google location history and biased random walkers on street graphs (in Python), August, 2022</h5>
       <img src="map/iceland_road.jpg" class="title_img" alt="A photograph of a road in Iceland. The road stretched off into rolling green hills. A glacier can be seen in the distance"></img>
       <h3>Google location data as introspection</h3>
-        I spent a good part of my PhD learning about how people explore spaces. I specifically was interested in abstract spaces, where distances in these spaces map on to the similarity of some set of items. These items could be emotions, objects, school subjects, birds, or anything else you want. It turns out lots of 
-        the theories how how humans learn and explore abstract spaces also hold water when examining how we or other animals explore physical spaces. These cross domain theories felt very satisfying to me; it seemed like they might be revealing something important about our behavior. 
+        I spent a good part of my PhD learning about how people explore spaces. I specifically was interested in abstract spaces, where distances in these spaces map on to the similarity of some set of items. These items could be emotions, objects, school subjects, <a>birds</a>, or anything else you want. It turns out lots of 
+        the theories for how how humans learn and explore abstract spaces also hold water when examining how we or other animals explore physical spaces. These cross domain theories felt very satisfying to me; it seemed like they might at best be revealing something important about our behavior, and at worst showing cool convergent behavioral motifs. 
 
-        I wanted to take some of my knowledge of exploration, as well penchant for leanring new data vis methods, to learn something about my own exploration style through physical space. What sorts of cost functions might I have in mind when traveling? How well have I really explored my city? How much am I driven by novelty, or familiarity?
-        This blog post will answer none of these questions. But it will go through the steps I took to learn things fundamental to answering these questions: the structure of Google maps location data, how to analyze road networks and implement random walks in Python. Along the way, we'll answer a much simpler and more pointless question: does my vacation to Iceland bear any qualitative similarity toa biased random walker?
+        I wanted to take some of my knowledge of exploration, as well penchant for leanring new data vis methods, to learn something about my own exploration style through physical space. What sorts of cost functions might I have in mind when traveling? How well have I really explored my city? How much are my paths driven by novelty, or familiarity?
+        This blog post will answer none of these questions. But it will go through the steps I took to learn things fundamental to answering them: the structure of Google maps location data; and how to analyze road networks and implement random walks in Python. Along the way, we'll answer a much simpler and more pointless question: does my vacation to Iceland bear any qualitative similarity to a biased random walker?
       
         <h4>Getting your Google location data</h4>
-        I'm going to use my own Google location data to visualize my path through Iceland. I followed these steps to download the data.
+        I'm going to use my own Google location data to visualize my path through Iceland. I followed <a>these steps</a> to download the data.
 
-        The data comes with two types of files, a more information rich folder called XX, and a sparser .csv called XX. We're working with the .csv here. The important features of this .csv are latitudes and longitudes, as well as time stamps. 
-        Coordinates will be mapped to publically available road networks using the package OSMNX, and timestapm will be used to order travel and filter data.
+        The data comes with two types of files, a more information rich folder called <i>Semantic Location History</i>, and sparser json file called <i>Records</i> . We're working with only the here. The important features of this data are latitudes and longitudes, as well as time stamps. 
+        Coordinates will be mapped to publically available road networks using the package OSMnx, and timestamp will be used to order and filter data.
 
         We can get rid of all the extra columns and clean up the ones we want like so:
-        
         <pre><code class="python">
         import pandas as pd
         import json
@@ -463,7 +462,7 @@ layout: default
 
         </code></pre>
 
-        As a quick validity check, let's use the OSMNX package to visualize all our different coordinates. Google has data on me since 2012, so this plot should include most of travels over the past decade.
+        As a quick validity check, let's use the geopandas package to visualize all our different coordinates. Google has data on my locations since 2012, so this plot should include most of my locations over the past decade (i.e. concentrated on the two US coasts).
 
         <pre><code class="python">
         import geopandas as gpd
@@ -480,7 +479,7 @@ layout: default
         </code></pre>
         <img src="map/all_map.png" class="post_img" alt="A map of the world scattered with dark blue dots. Most dots are concentrated on the costs of the US, though some dots are seen in Australia, Morocco, Sri Lanka, Iceland, DUbai, and other countries."></img>
 
-        Looks right to me! Now we're going filter down to the specific week where I was in Iceland
+        Great! Now we're going filter down to the specific week where I was in Iceland
         <pre><code class="python">
         st =  '2017-07-31'
         en = '2017-08-07'
@@ -493,41 +492,62 @@ layout: default
         Now that we have the data we'll be working with, we're ready to move on to working with road networks.
       
         <h3>Visualizing your paths through road networks</h3>
-        We'll be using two packages to help visualize my path through Iceland: OSMNX, and networkX. OSMNX has data about road maps for most of the world. networkX allows us to use intuitive graph data structures to get information about the road networks. Both of these packages leverage some ideas and terminology from graph theory that we're going to go over before starting.
+        We'll be using two packages to help visualize my path through Iceland: OSMnx, and networkX. OSMnx has data about road maps for most of the world. networkX allows us to use graph data structures to get information about the road networks. Both of these packages leverage some ideas and terminology from graph theory that we're going to go over before starting.
         
-        A network is a representation of system of two or more separable units (caled nodes) and the interactions between them (called edges). Visually, nodes are often depicted as circles, with edges between them depicted as lines. In our case, edges are going to be roads, and nodes are any intersections or decision points in those roads.
-        
+        A network or graph is a representation of system of two or more separable units (caled nodes) and the interactions between them (called edges). Visually, nodes are often depicted as circles, with edges between them depicted as lines. In our case, edges are going to be roads, and nodes are any intersections or decision points in those roads.
+        <img src="map/networ_ex.png" class="post_img" alt="Left: a vizualization, with circles labeled as nodes and lines connecting them labeled as edges. Right: the same network overlayed on a Google maps screen shot. Nodes are found at intersections, and edges ar roads."></img>
+
         First, we're going to get a graph representation of Iceland's roads
         <pre><code class="python">
         import osmnx as ox
 
         ox.config(log_console=True, use_cache=True)
-        # location where you want to find your route
+        # location of graph
         place     = 'Iceland'
-        # find shortest route based on the mode of travel
+        # find shortest route based on the mode of travel (for our purposes it doesnt really matter which one)
         mode      = 'walk'        # 'drive', 'bike', 'walk'
-        # find shortest path based on distance or time
+        # find shortest path based on which feature
         optimizer = 'length'        # 'length','time'
-        # create graph from OSM within the boundaries of some 
-        # geocodable place(s)
+        # create graph 
         graph = ox.graph_from_place(place, network_type = mode)
         </code></pre>
-
-        We can see this graph has nodes and edges that we can access with networkX
+        What exactly is this graph object?
+        <pre><code class="python">
+        type(graph)
+        </code></pre>
+        <p><strong>Output:</strong></p>
+        <pre>
+        networkx.classes.multidigraph.MultiDiGraph
+        </pre>
+        
+        This is a networkX object. This means we can use functions and attributes from networkX to get properties of the graph. For example, we can get the density (or proportion of possible connections) and number of edges in this graph.
 
         <pre><code class="python">
         import networkx as nx
+
+        print(nx.density(graph))
+        print(len(graph.get_edges()))
         </code></pre>
-        Our strategy for plotting my actual trajectory on this graph is as follows: get a starting coordinate; snap it to the closest spot on the road network; repeat for the next coordinate; get the shorted path between the start and end coordinate. We can then repeat this for every corrdinate to get one long path through Iceland.
+        <p><strong>Output:</strong></p>
+        <pre>
+        1.9575729910546824e-05
+        </pre>
+        <pre>
+        327816
+        </pre>
+        We're now going to use networkx to get paths between nodes that correspond to my location data. Our strategy for calculating my trajectory on this graph is as follows: get a starting coordinate; snap it to the closest spot on the road network; get an ending coordinate; snap it to the network; get the shorted path between the start and end coordinate; repeat.
         
         We can code up this strategy as follows:
         <pre><code class="python">
         route = []
         start_latlng = (iceland['lat'].values[0],iceland['long'].values[0])
+        
         # find the nearest node to the start location
         orig_node = ox.get_nearest_node(graph, start_latlng)
+        
+        # get the rest of the path
         for i in range(len(iceland) - 1):
-            # define the start and end locations in latlng
+            # define the end location in latlng
             end_latlng = (iceland['lat'].values[i+1],iceland['long'].values[i+1])
             # find the nearest node to the end location
             dest_node = ox.get_nearest_node(graph, end_latlng)
@@ -540,11 +560,12 @@ layout: default
             orig_node = dest_node
         </code></pre>
 
+
         And then plot it
         <pre><code class="python">
         from itertools import groupby 
 
-        # remove any dup;licates from the route - these cause the shortest path algorithm to break
+        # remove any duplicates from the route - these cause the plotting to break
         route = [i[0] for i in groupby(route)]
         fig, ax = ox.plot_graph_route(graph,
                                         route,
@@ -557,49 +578,148 @@ layout: default
         </code></pre>
         <img src="map/my_path.png" class="post_img" alt="A black background, with the all the roads in iceland plotted in dark grey. An orange line traces my path through the country."></img>
 
-        And here we have a nice visiualization of my vacation. While I did travel through most parts of the country, the path I took is very directed. No one area has dense coverage and the path mostly sticks to the coast.
+        And here we have a nice visiualization of my vacation. 
+        Its also important to note some limitations in this vizualization. This method requires snapping to a road network. This might get incorrect locations at times when I was not on a true road, like on hikes or boats. Additionally, the shortest path between two points might not be the path that I took. This can lead to wrong data especcially in cases where I travelled far between Google's recordings.
         
-        These observations make sense given what I wanted to get out of the trip. I wanted to see as much of the country as possible in the week I was there. I also had prebooked accomodations in different cities for every night, which didn't allow me to wander or dwell in any one area. 
+        Given these caveats, we can still observe some things about my path. While I did travel through most parts of the country, the path I took is very directed. No one area has dense coverage and the path mostly sticks to the coast. These observations make sense given what I wanted to get out of the trip. I wanted to see as much of the country as possible in the week I was there. I also had prebooked accomodations in different cities for every night, which didn't allow me to wander or dwell in any one area. 
 
-        How could this have looked different? What if I had showed up to Iceland and just wandered the streeets of Reykjavik, turning randomly whenever I felt like it? What I turned mostly randomly, but had a few goals in mind that I was trying to optimize? What if I wandered randomly, but then at somepoint drove to new, further away location so that I could wander there?
-        <h3>Biased random walkers</h3>
-        All of these strategies can coded up by imagining some agent who stands on a given node, and iteratively 'walks' to other connected nodes based on some rules. The rules are called 'biases', and often times even simple biases can sometimes lead to agents with behaviors that closely mimic real world behaviors. Even when they don't, they can identify how much of the variance in a behavior is explained by simple rules and help better identify which features we don't yet understand. We'll go over a few examples below
+        How could this have looked different? What if I had showed up to Iceland and just wandered the streeets of Reykjavik, turning randomly whenever I felt like it? What if I turned mostly randomly, but had tried to avoide places I had been before? What if I wandered randomly, but then at somepoint drove to new and further away location so that I could wander there?
+        <h3>Random walkers</h3>
+        All of these strategies can coded up by imagining some agent who stands on a given node, and iteratively 'walks' to other connected nodes based on some rules. The rules are called 'biases', and sometimes even simple biases can lead to agents with behaviors that closely mimic real world behaviors. Even when they don't, they can identify how much of the variance in a behavior is explained by simple rules and help better identify which features we don't yet understand. We'll go over a few examples below
 
-        <h4>Levy flights and novelty prioritization</h4>
-        One ocool algorithm for generating walks is called a Levy flight. It is characterized by walkers who stay mostly in the local neighborhood, but occasionally make big jumps to far away nodes on the graph. These walks model animal foraging behavior, as well as the wikipedia exploration of some people.
-        Practically, this is accomplished by haveing a random walker with a varying step size. The step size is drawn from an expoenetially decaying distribution, such that most steps will be small, but a few will be larger.
-
-        Coding the Levy flight relies on two parameters, one that determines the steepenss of the exponential distribution (\(c\)) and one that determines the maximum step size (\(d)\)
+        We'll start off looking what an unbiased random walker would do one the streets of Iceland, for a few different path lengths 
         <pre><code class="python">
+        # scaling factor for length of walk
+        c = 1 # plots shown for 1, 2, and 10
         # get decaying distribution of step sizes
-        c = 1 # controls steepness of decay
-        d = 5000 # max step size
-        n = len(iceland)
-        x = np.arange(1, d+1, 1)  # set upper bound for step size
-        pdfLevy = np.power(1/x, c)  # set u value, where 1 <= c <= 3
-        pdfLevy = pdfLevy/sum(pdfLevy)
-        optimizer = 'length'
-        mode = 'walk'
-        
+
         # intialize
         start_latlng = (iceland['lat'].values[i],iceland['long'].values[i])
         orig_node = ox.get_nearest_node(graph, start_latlng)
-        levy_route = [orig_node]
+        random_route = [orig_node]
+
+        # get the walk
+        for k in range(n):
+            # pick a node of the proper step size
+            next_node = list(graph.neighbors(orig_node))
+            # get random selection for next step
+            dest_node = np.random.choice(next_node)
+            
+            # only add to our route
+            random_route.append(dest_node)
+            orig_node = dest_node
         </code></pre>
 
-        We can then use these parameters to get a walk through the streets of Iceland similarly to what we did before. However, now instead of getting the successive nodes from the Google location data, we'll be getting them from the graph of Iceland itself.
-        <pre><code clas="python">
-        
-        </code></pre>
-        <img src="map/levy.png" class="post_img" alt="A black background, with the all the roads in iceland plotted in dark grey. A gold line traces a Levy flight through the country."></img>
-        This algorithm looks a lot different from my path! It doesn't see the whole country, but the parts it does see it explores much more densely. Maybe part of the reason why this walk looks so different is that it tends to get stuck in cities or other densely connected areas. It might visit these streeets many times before it happens to stumble out.
+            <div class="series_text">\(c=1\)
+                <img src="map/random_n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A gold line traces a random walk the same length as my vacation through the country. The walk is clustered around Reykjavik"></img>
+            </div>
+            <div class="series_text">\(c=2\)
+                <img src="map/random_2n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A gold line traces a random walk twive the length of my vacation through the country. The walk is clustered around Reykjavik"></img>
+            </div>
+            <div class="series_text">\(c=10\)
+                <img src="map/random_10n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A gold line traces a random walk 10 times length of my vacation through the country. The walk is clustered around Reykjavik"></img>
+            </div>
+
+        This algorithm looks a lot different from my path! It doesn't see the whole country, and infact never really gets out of Reyykjavik, even if it takes 10 times more steps than I do. This isn't surprising given how much more densely connected streets are inside of cities than outside of them.
+        Once you're inside a city, more intersections will lead you into the city than out of it. Maybe if we try to to avoid nodes we've already seen, we can make sure that we get out of the city eventually.
 
         We can add biases to this walk algorithm to make it less likely to revisit nodes that its already been too. This is accomplished by adding an additional parameter (\(r\)) that sets the relative probability of revisiting nodes already in the path versus visiting new ones.
         <pre><code clas="python">
+        r = 0.01
+
+        # get the walk
+        for k in range(n):
+            # get neighboring nodes
+            next_node = list(graph.neighbors(orig_node))
+            # get transition probabilities, weighted by revisits
+            transition_prob = np.ones((len(next_node),))
+            revisit_idx = [m in bias_random_route for m in next_node]
         
+            # check if all nodes are revisits/new
+            if (len(set(revisit_idx)) == 1):
+                # set equal probability
+                transition_prob = transition_prob*(1/len(transition_prob))
+            else:
+                # parameter r determines bias
+                transition_prob[revisit_idx] = r*transition_prob[0]
+                # normalize so it sums to 1
+                transition_prob = transition_prob/sum(transition_prob)
+                    
+            # get random selection for next step
+            dest_node = np.random.choice(next_node, size=1, replace=False, p=transition_prob)
+            dest_node = dest_node[0] # unwrap from list
+            
+            # only add to our route
+            bias_random_route.append(dest_node)
+            orig_node = dest_node
         </code></pre>
+
+            <div class="series_text">\(c=1\)
+                <img src="map/bias_random_n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A pink line traces a random walk the same length as my vacation through the country. The walk is clustered around Reykjavik"></img>
+            </div>
+            <div class="series_text">\(c=2\)
+                <img src="map/bias_random_2n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A pink line traces a random walk twive the length of my vacation through the country. The walk is clustered around Reykjavik"></img>
+            </div>
+            <div class="series_text">\(c=10\)
+                <img src="map/bias_random_10n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A pink line traces a random walk 10 times length of my vacation through the country. The walk is clustered around Reykjavik"></img>
+            </div>
+            
+        This bias towards novelty does a little better. Now, we much more easily get out of the city, and even get to a different part of the island. But the areas it visits are still more densely explored than mine, and I stil get more coverage of the island as whole. Additionally, the random walkers need many more steps to explore the country outside of the city than I did.
+
+        There's a lot of ways we could build on this bias towards novelty to get more realistic looking walks. We culd add a bias towards popular locations, or force the walk to start and stop at the airport. But for now we'll stop here, and appreciate the aesthetic differences in these few exploration styles.
+
+        <h3>Other resources</h3>
+        <ul>
+            <li>This project was inspired by <a class="ext" href="https://twitter.com/IvaBrunec/status/1536141712426409985">this twitter post </a> by Dr. Iva Brunec</li>
+            <li>In addition to the documentation, this posts on <a class="ext" hreaf="https://towardsdatascience.com/visualization-in-python-finding-routes-between-points-2d97d4881996">OSMnx</a> was useful</li>
+        </ul>
     </div>
-    
+   <!---   <div class="card">
+      <h2>Another 'academia to industry' story'</h2>
+      <h5>An advice-free recouting of my experience, Sep 2, 2017</h5>
+      <div class="fakeimg" style="height:200px;">Image</div>
+      <h3>Don't read this for advice</h3>
+        When I entered my PhD, I was pretty confident that I didn't want to be a professor. I was also very ambitious and anxious about non-academic career prospects in my field. Becuase of this, I went to every career panel, read every Twitter thread, and consumed every piece of unsoliticited advice about post-PhD non-academic jobs as gospel. 
+        While these resources were helpful early on in the process and I'm greatful to everyone who organized and volunteered advice, I did notice that at some point the advice is either too general to be useful, or too specific to someones experience to apply to me. 
+        Sometimes, I used this advice as a way to make decisions without thinking too deeply or challenging what I wanted. 
+
+        That being said, once I finally did enter the job market, there were a lot of things that surprised me and that might interest other people trying to make a similar move. I wanted to document my experience, without suggesting that it will be similar to anyone elses. I hope that thiss will serve as one of many personal stories
+        people can use to get an estimate of the variety of outcomes, or maybe find solidarity for something they are experiencing
+
+      <h4>Positionality statement</h4>
+        I am a white, striaght, cis woman. One of my parents has a PhD (but is not a professor). I've only ever lived in the US. I suffer from anxiety and mood disorders, but am otherwise healthy. My experience might be colored by these different things.
+        
+    <h3> I knew why I wanted to leave </h3>
+        While my reason's changed throughout my PhD, by the end I felt like I had a good understanding of why I wanted to leave.
+    <h4>Icentive structures</h4>
+        I care a lot about external feedback. Therefore, it's important to me that my work is valued by the community I am a part of. Throughout my PhD, it became increasingly clear that academic incentive structures did not align with my own.
+        I value interpersonal relationships, personal growth, community, measurable impacts. Being a scientist felt more like being an artist. Short term measures of impact in science seemed more strongly influenced
+        by name recognition and salesmanship than any controlable output. Additionally, community and relational work was not valued at the same level as other impacts. I felt like I could do the type of work I liked and not see my value in the instution, or do what the instution valued and find my work hollow.
+
+        In addition, there are practicalities of the lifestyle that didn't suit me. I wanted a job that allowed me to prioritize my loved ones. That would give me a high salary in my 30s, rather than 40s. And that was more structured and secure.
+      <h3>I didn't know what Industry meant</h3>
+        Early in my PhD, 'industry' was synonymous with 'any thing not academic' to me. This definition worked well in conversations with my grad student peers, but led to miscommunications in other spaces.
+        My first non-academic experience was an internship at a university affiliated research center. These instutions typically do contracted research, often times for different governemnt aencies, and receive some steady funding from a university. Decidedly not academia. But also not industry.
+        In my first meeting with my mentor, I asked about differences between academic and industry jobs. She replied that she has never worked in industry, but could answer my question for government jobs,
+        research institutes, non-profits, and university affiliated research centers
+
+        Industry
+        Non-profit
+        Government
+
+      <h3>I didn't know what companies wanted</h3>
+      Most of my experience selling myself had been in personal statemnts for school. In these statements, I tended to focus a lot on my decision for pursuing education, why I was excited about the school, and generally trying to convince people that I was committed to the path. 
+      That same strategy did not bear fruit for me in job and internship applications. It was my experience that other venues want to know about what you do for them, and don't really care about why you're applying. Or maybe they care, but only after they know you're bringing them value.
+
+      <h3>I didn't know my own priorities</h3>
+      
+      <h3>I didn't know how people in industry viewed academia<\h3>
+
+      <h3> Career paths aren't linear, and I was not an exception <\h3>
+
+      
+    </div>
+  </div> 
  <!---   <div class="card">
       <h2>TITLE HEADING</h2>
       <h5>Title description, Sep 2, 2017</h5>
