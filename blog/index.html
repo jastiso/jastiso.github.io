@@ -422,18 +422,17 @@ layout: default
       <h2>How many roads must a random walker walk down before it gets out of Reykjavik?</h2>
       <h5>Analyzing your Google location history and biased random walkers on street graphs (in Python), August, 2022</h5>
       <img src="map/iceland_road.jpg" class="title_img" alt="A photograph of a road in Iceland. The road stretched off into rolling green hills. A glacier can be seen in the distance"></img>
-      <h3>Google location data as introspection</h3>
-        I spent a good part of my PhD learning about how people explore spaces. I specifically was interested in abstract spaces, where distances in these spaces map on to the similarity of some set of items. These items could be emotions, objects, school subjects, <a>birds</a>, or anything else you want. It turns out lots of 
+        I spent a good part of my PhD learning about how people explore spaces. I specifically was interested in abstract spaces, where distances in these spaces map on to the similarity between items. These items could be emotions, objects, school subjects, <a href="https://europepmc.org/backend/ptpmcrender.fcgi?accid=PMC5248972&blobtype=pdf">birds</a>, or anything else you want. It turns out lots of 
         the theories for how how humans learn and explore abstract spaces also hold water when examining how we or other animals explore physical spaces. These cross domain theories felt very satisfying to me; it seemed like they might at best be revealing something important about our behavior, and at worst showing cool convergent behavioral motifs. 
 
         I wanted to take some of my knowledge of exploration, as well penchant for leanring new data vis methods, to learn something about my own exploration style through physical space. What sorts of cost functions might I have in mind when traveling? How well have I really explored my city? How much are my paths driven by novelty, or familiarity?
-        This blog post will answer none of these questions. But it will go through the steps I took to learn things fundamental to answering them: the structure of Google maps location data; and how to analyze road networks and implement random walks in Python. Along the way, we'll answer a much simpler and more pointless question: does my vacation to Iceland bear any qualitative similarity to a biased random walker?
+        This blog post will answer none of these questions. But it will go through the steps I took to learn a few things that are fundamental to answering them: the structure of Google maps location data; and how to analyze road networks and implement random walks in Python. Along the way, we'll answer a much simpler and more pointless question: does my vacation to Iceland bear any qualitative similarity to a biased random walker?
       
-        <h4>Getting your Google location data</h4>
-        I'm going to use my own Google location data to visualize my path through Iceland. I followed <a>these steps</a> to download the data.
+        <h3>Google location data for exploration</h3>
+        I'm going to use my own Google location data to visualize my path through Iceland. I followed <a href="https://www.howtogeek.com/725241/how-to-download-your-google-maps-data/#:~:text=To%20download%20your%20data%2C%20head,%E2%80%9CDownload%20Your%20Maps%20Data.%E2%80%9D">these steps</a> to download the data.
 
-        The data comes with two types of files, a more information rich folder called <i>Semantic Location History</i>, and sparser json file called <i>Records</i> . We're working with only the here. The important features of this data are latitudes and longitudes, as well as time stamps. 
-        Coordinates will be mapped to publically available road networks using the package OSMnx, and timestamp will be used to order and filter data.
+        The data come in two sets, a more information rich folder called <i>Semantic Location History</i>, and sparser json file called <i>Records</i> . We're working with only the Records data here. The important features of this data are latitudes and longitudes, as well as time stamps. 
+        Coordinates will be mapped to publically available road networks using the package OSMnx, and timestamps will be used to order and filter data.
 
         We can get rid of all the extra columns and clean up the ones we want like so:
         <pre><code class="python">
@@ -492,12 +491,12 @@ layout: default
         Now that we have the data we'll be working with, we're ready to move on to working with road networks.
       
         <h3>Visualizing your paths through road networks</h3>
-        We'll be using two packages to help visualize my path through Iceland: OSMnx, and networkX. OSMnx has data about road maps for most of the world. networkX allows us to use graph data structures to get information about the road networks. Both of these packages leverage some ideas and terminology from graph theory that we're going to go over before starting.
+        We'll be using two Python packages to help visualize my path through Iceland: OSMnx, and networkX. OSMnx has data about road maps for most of the world. networkX allows us to use graph data structures to get information about the road networks. Both of these packages leverage some ideas and terminology from graph theory that we're going to go over before starting.
         
-        A network or graph is a representation of system of two or more separable units (caled nodes) and the interactions between them (called edges). Visually, nodes are often depicted as circles, with edges between them depicted as lines. In our case, edges are going to be roads, and nodes are any intersections or decision points in those roads.
+        A network or graph is a representation of system of two or more separable units (caled nodes) and the interactions between them (called edges). Visually, nodes are often depicted as circles, with edges between them depicted as lines. In our case, edges are going to be roads and nodes are any intersections or decision points in those roads.
         <img src="map/networ_ex.png" class="post_img" alt="Left: a vizualization, with circles labeled as nodes and lines connecting them labeled as edges. Right: the same network overlayed on a Google maps screen shot. Nodes are found at intersections, and edges ar roads."></img>
 
-        First, we're going to get a graph representation of Iceland's roads
+        First, let's get a graph representation of Iceland's roads
         <pre><code class="python">
         import osmnx as ox
 
@@ -511,7 +510,7 @@ layout: default
         # create graph 
         graph = ox.graph_from_place(place, network_type = mode)
         </code></pre>
-        What exactly is this graph object?
+        What exactly is this graph object we just made?
         <pre><code class="python">
         type(graph)
         </code></pre>
@@ -520,7 +519,7 @@ layout: default
         networkx.classes.multidigraph.MultiDiGraph
         </pre>
         
-        This is a networkX object. This means we can use functions and attributes from networkX to get properties of the graph. For example, we can get the density (or proportion of possible connections) and number of edges in this graph.
+        This is a networkX object. This means we can use functions and attributes from networkX to get properties of the graph. For example, we can get the density (or proportion of possible connections present) and number of edges in this graph.
 
         <pre><code class="python">
         import networkx as nx
@@ -578,21 +577,19 @@ layout: default
         </code></pre>
         <img src="map/my_path.png" class="post_img" alt="A black background, with the all the roads in iceland plotted in dark grey. An orange line traces my path through the country."></img>
 
-        And here we have a nice visiualization of my vacation. 
-        Its also important to note some limitations in this vizualization. This method requires snapping to a road network. This might get incorrect locations at times when I was not on a true road, like on hikes or boats. Additionally, the shortest path between two points might not be the path that I took. This can lead to wrong data especcially in cases where I travelled far between Google's recordings.
+        And here we have a visiualization of my vacation. 
+        It's also important to note some limitations in this vizualization. This method requires snapping to a road network. This might get incorrect locations at times when I was not on a true road, like on hikes or boats. Additionally, the shortest path between two points might not be the path that I took. This can lead to wrong data especcially in cases where I travelled far between Google's recordings.
         
         Given these caveats, we can still observe some things about my path. While I did travel through most parts of the country, the path I took is very directed. No one area has dense coverage and the path mostly sticks to the coast. These observations make sense given what I wanted to get out of the trip. I wanted to see as much of the country as possible in the week I was there. I also had prebooked accomodations in different cities for every night, which didn't allow me to wander or dwell in any one area. 
 
-        How could this have looked different? What if I had showed up to Iceland and just wandered the streeets of Reykjavik, turning randomly whenever I felt like it? What if I turned mostly randomly, but had tried to avoide places I had been before? What if I wandered randomly, but then at somepoint drove to new and further away location so that I could wander there?
+        How could this have looked different? What if I had showed up to Iceland and just wandered the streeets of Reykjavik, turning randomly whenever I felt like it? What if I turned mostly randomly, but had tried to avoide places I had been before?
         <h3>Random walkers</h3>
-        All of these strategies can coded up by imagining some agent who stands on a given node, and iteratively 'walks' to other connected nodes based on some rules. The rules are called 'biases', and sometimes even simple biases can lead to agents with behaviors that closely mimic real world behaviors. Even when they don't, they can identify how much of the variance in a behavior is explained by simple rules and help better identify which features we don't yet understand. We'll go over a few examples below
+        All of these strategies can be coded up by imagining some agent who stands on a given node, and iteratively 'walks' to other connected nodes based on some rules. The rules are called 'biases', and sometimes even simple biases can lead to agents with behaviors that closely mimic real world behaviors. Even when they don't, they can identify how much of the variance in a behavior is explained by simple rules and help better identify which features we don't yet understand. We'll go over a few examples below
 
-        We'll start off looking what an unbiased random walker would do one the streets of Iceland, for a few different path lengths 
+        We'll start off looking what an unbiased random walker would do one the streets of Iceland (starting in Reykjavik), for a few different path lengths 
         <pre><code class="python">
         # scaling factor for length of walk
         c = 1 # plots shown for 1, 2, and 10
-        # get decaying distribution of step sizes
-
         # intialize
         start_latlng = (iceland['lat'].values[i],iceland['long'].values[i])
         orig_node = ox.get_nearest_node(graph, start_latlng)
@@ -620,8 +617,8 @@ layout: default
                 <img src="map/random_10n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A gold line traces a random walk 10 times length of my vacation through the country. The walk is clustered around Reykjavik"></img>
             </div>
 
-        This algorithm looks a lot different from my path! It doesn't see the whole country, and infact never really gets out of Reyykjavik, even if it takes 10 times more steps than I do. This isn't surprising given how much more densely connected streets are inside of cities than outside of them.
-        Once you're inside a city, more intersections will lead you into the city than out of it. Maybe if we try to to avoid nodes we've already seen, we can make sure that we get out of the city eventually.
+        This algorithm looks a lot different from my path! It doesn't see the whole country, and infact never really gets far out of Reyykjavik, even if it takes 10 times more steps than I do. This isn't surprising given how much more densely connected streets are inside of cities than outside of them.
+        Once you're inside a city, more intersections will lead you into the city than out of it, leading to a spot where random walkers will tend to accumulate. Maybe if we try to to avoid intersections we've already seen, we can make sure that we get out of the city eventually.
 
         We can add biases to this walk algorithm to make it less likely to revisit nodes that its already been too. This is accomplished by adding an additional parameter (\(r\)) that sets the relative probability of revisiting nodes already in the path versus visiting new ones.
         <pre><code clas="python">
@@ -663,15 +660,16 @@ layout: default
             <div class="series_text">\(c=10\)
                 <img src="map/bias_random_10n.png" class="series_img" alt="A plot with a black background, and the all the roads in iceland plotted in dark grey. A pink line traces a random walk 10 times length of my vacation through the country. The walk is clustered around Reykjavik"></img>
             </div>
-            
-        This bias towards novelty does a little better. Now, we much more easily get out of the city, and even get to a different part of the island. But the areas it visits are still more densely explored than mine, and I stil get more coverage of the island as whole. Additionally, the random walkers need many more steps to explore the country outside of the city than I did.
 
-        There's a lot of ways we could build on this bias towards novelty to get more realistic looking walks. We culd add a bias towards popular locations, or force the walk to start and stop at the airport. But for now we'll stop here, and appreciate the aesthetic differences in these few exploration styles.
+        This bias towards novelty does a little better. Now, we much more easily get out of the city, and even get to a different part of the island. But the areas it visits are still more densely explored than mine, and I stil get more coverage of the island as whole.
+
+        There's a lot of ways we could build on this bias towards novelty to get more realistic looking walks. We culd add a bias towards popular locations, force the walk to start and stop at the airport, or give the walker global knowledge of the graph and tell it to navigate efficiently to specific landmarks. But for now we'll stop here, and appreciate the aesthetic differences in these few exploration styles.
 
         <h3>Other resources</h3>
         <ul>
             <li>This project was inspired by <a class="ext" href="https://twitter.com/IvaBrunec/status/1536141712426409985">this twitter post </a> by Dr. Iva Brunec</li>
             <li>In addition to the documentation, this posts on <a class="ext" hreaf="https://towardsdatascience.com/visualization-in-python-finding-routes-between-points-2d97d4881996">OSMnx</a> was useful</li>
+            <li>Color scheme from <a href="https://github.com/katiejolly/nationalparkcolors">the Channel Islands</a></li>
         </ul>
     </div>
    <!---   <div class="card">
