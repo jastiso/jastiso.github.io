@@ -10,6 +10,7 @@ body {
 .series_text {
     display: inline-block;
     text-align: center;
+    width:30%
 }
 
 img.series_img {
