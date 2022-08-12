@@ -13,17 +13,17 @@ layout: default
   <div class="leftcolumn">
     <div class="card">
       <h2>Double/debiased machine learning</h2>
-      <h5>Light- to medium-math exaplaination of the method with tutorials, June, 2021</h5>
+      <h5>Light- to medium-math explanation of the method with tutorials, June, 2021</h5>
       <img src="dml/dml_bird.jpg" class="title_img" alt="Photograph of two wading birds, facing opposite directions (great blue heron and snowy egret). Photo taken with vintage 300mm Nikon lens"></img>
       <p>
 
         <h3>What is double machine learning</h3>
-        To me -- and potentially, <a class="ext" href="https://youtu.be/eHOjmyoPCFU?t=110"> its creator </a>-- Double Machine Learning sounds like a trendy name you would give a method to try to sound impressive in developer spaces. Double (or debiased) machine learning is actually a way to esetimate specific causal effects in large, complex data [1]. Previously many causal 
-        modeling methods relied on assuming a specific form of the data rather than learning it - namely assuming that varialbes were normally distibuted and linearly related to eachother. In addition to these faulty assumptions, these methods don't allow for complex data where the entropy of the parameter space increases with increasing observations (in otherwords - most large, modern datasets). Combined, these features made causal inference difficult to apply to realworld problems.
+        To me -- and potentially, <a class="ext" href="https://youtu.be/eHOjmyoPCFU?t=110"> its creator </a>-- Double Machine Learning sounds like a trendy name you would give a method to try to sound impressive in developer spaces. Double (or debiased) machine learning is actually a way to estimate specific causal effects in large, complex data [1]. Previously many causal 
+        modeling methods relied on assuming a specific form of the data rather than learning it - namely assuming that variables were normally distributed and linearly related to each other. In addition to these faulty assumptions, these methods don't allow for complex data where the entropy of the parameter space increases with increasing observations (in other words - most large, modern datasets). Combined, these features made causal inference difficult to apply to realworld problems.
         
         
-        A method called double machine learning (DML) allows causal inference to coexist with complex data with few assumptions, which has drummed up a lot of well deserved excitement about the method (primarily in economics). 
-        When I was trying to learn more about DML, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there took a very theoretical approach. I wanted to create a resource that explained the theory at a higher level, and had a larger emphasis on code based explainations.  
+        A method called double machine learning (DML) allows causal inference to coexist with complex data with few assumptions, which has drummed up a lot of well-deserved excitement about the method (primarily in economics). 
+        When I was trying to learn more about DML, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there took a very theoretical approach. I wanted to create a resource that explained the theory at a higher level and had a larger emphasis on code based explainations.  
         This post focuses on understanding how the DML algorthim works. I hope later to do a post on its application, but for now I'll point people to this <a class="ext" href="https://econml.azurewebsites.net/spec/estimation/dml.html">tutorial</a>.
 
         
@@ -36,7 +36,7 @@ layout: default
         
         Here, Y is some clinical outcome of interest (risk of disease, probability of diagnosis, etc.). T is some treatment or intervention. X is all the
          relevant demographic, medical and social features of the patients. This diagram is illustrating that the treatment will influence the risk of disease, and that features of the
-         patient will influence both the risk and which/whether treatments will be given. When clinician are decising which treatments to give, it would be helpful to know the size of the arrow connecting T and Y
+         patient will influence both the risk and which/whether treatments will be given. When clinician are deciding which treatments to give, it would be helpful to know the size of the arrow connecting T and Y
           (referred to now as the treatment effect). Specifically, we'd want the estimation of the treatment effect to:
         <ol>
               <li> be accurate with a lot of data (might seem obvious, but this is harder than it sounds)</li>
@@ -56,7 +56,7 @@ layout: default
             <li>Despite our best efforts, machine learning models fit on data that follow the causal diagram above tend to overfit data, further biasing results.</li>
          </ol>
 
-         DML can remove those two sources of bias and give us an estimate of the treatment effect and all of the extra points outlined above. At a high level, 
+         DML can remove those two sources of bias and give us an estimate of the treatment effect and all the extra points outlined above. At a high level, 
                 these biases are alleviated by fitting two separate machine learning models (thus the name) to estimate the effect of X on Y and T, and then solving for
                 theta using the residuals of those estimates (more details on this below). Additionally, there are now some pretty good packages implementing DML 
                 in python that play nicely with scikit learn. All together, making it a desireable new method for applied scientists, and motivating me to give it a try.
@@ -110,7 +110,7 @@ layout: default
         
         These equations are a useful example because they give us a specific functional form for how \(T\) affects \(Y\) (\(T \times \theta_0\)). Since this relationship is linear,
         it makes some of the math a little bit nicer. In the end, we want DML to work for more than just this specific situation, but this definition is useful for now. 
-        If we were to code up these relationships in python, it would look something like this. Note that to code this up we have to pick a specific \(g_0(X)\) and \(m_0(X)\). It could be whatever you want, but here we're using some exponential sums of the first few columns of X (I picked this because that's what the original paper does).
+        If we were to code up these relationships in python, it would look something like this. Note that to code this up we must pick a specific \(g_0(X)\) and \(m_0(X)\). It could be whatever you want, but here we're using some exponential sums of the first few columns of X (I picked this because that's what the original paper does).
         
         <pre><code class="python"> 
         from scipy.linalg import toeplitz
@@ -143,7 +143,7 @@ layout: default
         Let's imagine you're given some X, T, and Y data, as well as the data generating equations above. You're then asked to estimate what theta is. 
         One first attempt might be to build one machine learning model of \(T\theta_{0} + g_{0}(X)\) and \(g_0(X)\), then regress out \(T\) to solve for \(\theta_0\).  
         
-        This is a little tricky because \(g_0(X)\) is not the influence of \(X\) on \(Y\), its the influence of \(X\) on the part of \(Y\) that isnt influenced by \(T \times \theta_0\). Therefore we have to do this iteratively: get an initial guess for \(\theta_0\) in order to estimate \(g_0(X)\); then use that estimate of \(g_0(X)\) to solve for \(\theta_0\).
+        This is a little tricky because \(g_0(X)\) is not the influence of \(X\) on \(Y\), its the influence of \(X\) on the part of \(Y\) that isn’t influenced by \(T \times \theta_0\). Therefore, we have to do this iteratively: get an initial guess for \(\theta_0\) in order to estimate \(g_0(X)\); then use that estimate of \(g_0(X)\) to solve for \(\theta_0\).
         In code, the direct method would look like this:
         
         First, we'd simulate our data, and build our machine learning estimate of \(Y\) from \(T\theta_{0} + g_{0}(X)\) (we'll call this model \(l_0(X)\))
@@ -158,7 +158,7 @@ layout: default
         ml_l.fit(x,y)
         </code>></pre>
         
-        Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data generating function). Next we can take an initial guess for \(\theta_0\), and then fit our estimate of \(g_0(X)\)
+        Note that you could use whatever machine model you want, it doesn't have to be a random forest. In this example, it should be anything that can estimate exponential functions (since that's the form we picked for our data generating function). Next, we can take an initial guess for \(\theta_0\), and then fit our estimate of \(g_0(X)\)
         <pre><code class="python"> 
          # this will be our model for predicting Y - T*theta from X, or g0_hat
          ml_g = RandomForestRegressor()
@@ -201,7 +201,7 @@ layout: default
         
         At a high level, part of what went wrong is that we did not explicitly model the effect of \(X\) on \(T\). That influence is biasing our estimate. 
         Illustrating this explicitly is where our partially linear data generating process comes in handy. We can write out an equation for the error in our estimate.
-        The goal here would be for the left hand side to converge to 0 as we get more data.
+        The goal here would be for the left-hand side to converge to 0 as we get more data.
 
          <h4>regularization bias</h4>
 
@@ -272,17 +272,17 @@ layout: default
          err = err/np.sqrt(sigma2_hat)
         </code>></pre>
 
-        If we plot a similar histogram over 200 simulations we'll get something like this:
+        If we plot a similar histogram over 200 simulations, we'll get something like this:
         
          <img src="dml/nocf_orth.png" class="post_img" alt="A blue histogram of treatment estimation errors centered on -8, ranging from about -12 to -4"></img>
 
         And we have greatly reduced (but not eliminated) our bias!
 
-        For this specific data generating process, we now have a way of estimating \(\theta\) without regularization bias! However I mentioned earlier that we want to be 
+        For this specific data generating process, we now have a way of estimating \(\theta\) without regularization bias! However, I mentioned earlier that we want to be 
         able to estimate more than only this process. In particular, step three involves linear regression, and only works in our partially linear example. How do
          we generalize the method of estimating \(\theta\)?
          
-         The least squares solution for linear relationships esentially finds the parameters for a line that minimizes the error between the predicted points on 
+         The least squares solution for linear relationships essentially finds the parameters for a line that minimizes the error between the predicted points on 
          the line, and the observed data. We can write this as the minimization of a cost function of our data and true parameters
          
          $$ \psi(W; \theta, \eta) = 0 $$
@@ -318,7 +318,7 @@ layout: default
          </ol>
         
          <h4>overfitting bias</h4>
-        We now have a generalizable solution to regulatization bias. Additionally, with the definition of a cost function, we have a method of evaluating our DML
+        We now have a generalizable solution to regularization bias. Additionally, with the definition of a cost function, we have a method of evaluating our DML
          estimator and comparing different models. Specifically, we can find the model that gives smallest value for our moment condition. The specific value of
          this function is usually called a 'score' or 'Neyman orthogonality score', and the closer to 0 it is the better. We would use this value to perform model 
         selection when applying this method.
@@ -330,7 +330,7 @@ layout: default
         We've discussed the first two terms already, but I'm revealing the last term we had hidden previously.
         If any overfitting is present in \(\hat{g_0}\), the estimate will pick up some noise from the noise term \(U\). This will slow down the convergence of this new term to 0
         
-        The solution to this bias is to fit \(g\) and \(m\) on a different set of data than the set used to estimate \(\theta\). Similar to how cross-validation avoids overfitting 
+        The solution to this bias is to fit \(g\) and \(m\) on a different set of data than the set used to estimate \(\theta\). Like how cross-validation avoids overfitting 
         during parameter selection, this method (called cross-fitting) avoids overfitting in out estimation of \(\theta\). This changes our DML steps slightly.
         
         <ol>
@@ -491,10 +491,10 @@ layout: default
         Now that we have the data we'll be working with, we're ready to move on to working with road networks.
       
         <h3>Visualizing your paths through road networks</h3>
-        We'll be using two Python packages to help visualize my path through Iceland: OSMnx, and networkX. OSMnx has data about road maps for most of the world. networkX allows us to use graph data structures to get information about the road networks. Both of these packages leverage some ideas and terminology from graph theory that we're going to go over before starting.
+        We'll be using two Python packages to help visualize my path through Iceland: OSMnx, and networkX. OSMnx has data about road maps for most of the world. networkX allows us to use graph data structures to get information about the road networks. Both packages leverage some ideas and terminology from graph theory that we're going to go over before starting.
         
-        A network or graph is a representation of system of two or more separable units (caled nodes) and the interactions between them (called edges). Visually, nodes are often depicted as circles, with edges between them depicted as lines. In our case, edges are going to be roads and nodes are any intersections or decision points in those roads.
-        <img src="map/networ_ex.png" class="post_img" alt="Left: a vizualization, with circles labeled as nodes and lines connecting them labeled as edges. Right: the same network overlayed on a Google maps screen shot. Nodes are found at intersections, and edges ar roads."></img>
+        A network or graph is a representation of system of two or more separable units (called nodes) and the interactions between them (called edges). Visually, nodes are often depicted as circles, with edges between them depicted as lines. In our case, edges are going to be roads and nodes are any intersections or decision points in those roads.
+        <img src="map/networ_ex.png" class="post_img" alt="Left: a visualization, with circles labeled as nodes and lines connecting them labeled as edges. Right: the same network overlayed on a Google maps screen shot. Nodes are found at intersections, and edges are roads."></img>
 
         First, let's get a graph representation of Iceland's roads
         <pre><code class="python">
@@ -534,7 +534,7 @@ layout: default
         <pre>
         327816
         </pre>
-        We're now going to use networkx to get paths between nodes that correspond to my location data. Our strategy for calculating my trajectory on this graph is as follows: get a starting coordinate; snap it to the closest spot on the road network; get an ending coordinate; snap it to the network; get the shorted path between the start and end coordinate; repeat.
+        We're now going to use networkX to get paths between nodes that correspond to my location data. Our strategy for calculating my trajectory on this graph is as follows: get a starting coordinate; snap it to the closest spot on the road network; get an ending coordinate; snap it to the network; get the shorted path between the start and end coordinate; repeat.
         
         We can code up this strategy as follows:
         <pre><code class="python">
@@ -575,16 +575,16 @@ layout: default
                                         route_alpha=0.9,
                                         orig_dest_size=0)
         </code></pre>
-        <img src="map/my_path.png" class="post_img" alt="A black background, with the all the roads in iceland plotted in dark grey. An orange line traces my path through the country."></img>
+        <img src="map/my_path.png" class="post_img" alt="A black background, with the all the roads in Iceland plotted in dark grey. An orange line traces my path through the country."></img>
 
-        And here we have a visiualization of my vacation. 
-        It's also important to note some limitations in this vizualization. This method requires snapping to a road network. This might get incorrect locations at times when I was not on a true road, like on hikes or boats. Additionally, the shortest path between two points might not be the path that I took. This can lead to wrong data especcially in cases where I travelled far between Google's recordings.
+        And here we have a visualization of my vacation. 
+        It's also important to note some limitations in this visualization. This method requires snapping to a road network. This might get incorrect locations at times when I was not on a true road, like on hikes or boats. Additionally, the shortest path between two points might not be the path that I took. This can lead to wrong data especially in cases where I travelled far between Google's recordings.
         
-        Given these caveats, we can still observe some things about my path. While I did travel through most parts of the country, the path I took is very directed. No one area has dense coverage and the path mostly sticks to the coast. These observations make sense given what I wanted to get out of the trip. I wanted to see as much of the country as possible in the week I was there. I also had prebooked accomodations in different cities for every night, which didn't allow me to wander or dwell in any one area. 
+        Given these caveats, we can still observe some things about my path. While I did travel through most parts of the country, the path I took is very directed. No one area has dense coverage, and the path mostly sticks to the coast. These observations make sense given what I wanted to get out of the trip. I wanted to see as much of the country as possible in the week I was there. I also had prebooked accomodations in different cities for every night, which didn't allow me to wander or dwell in any one area. 
 
         How could this have looked different? What if I had showed up to Iceland and just wandered the streeets of Reykjavik, turning randomly whenever I felt like it? What if I turned mostly randomly, but had tried to avoide places I had been before?
         <h3>Random walkers</h3>
-        All of these strategies can be coded up by imagining some agent who stands on a given node, and iteratively 'walks' to other connected nodes based on some rules. The rules are called 'biases', and sometimes even simple biases can lead to agents with behaviors that closely mimic real world behaviors. Even when they don't, they can identify how much of the variance in a behavior is explained by simple rules and help better identify which features we don't yet understand. We'll go over a few examples below
+        All these strategies can be coded up by imagining some agent who stands on a given node, and iteratively 'walks' to other connected nodes based on some rules. The rules are called 'biases', and sometimes even simple biases can lead to agents with behaviors that closely mimic real-world behaviors. Even when they don't, they can identify how much of the variance in a behavior is explained by simple rules and help better identify which features we don't yet understand. We'll go over a few examples below
 
         We'll start off looking what an unbiased random walker would do one the streets of Iceland (starting in Reykjavik), for a few different path lengths 
         <pre><code class="python">
@@ -663,7 +663,7 @@ layout: default
 
         <p>This bias towards novelty does a little better. Now, we much more easily get out of the city, and even get to a different part of the island. But the areas it visits are still more densely explored than mine, and I stil get more coverage of the island as whole.
         </p>
-        There's a lot of ways we could build on this bias towards novelty to get more realistic looking walks. We culd add a bias towards popular locations, force the walk to start and stop at the airport, or give the walker global knowledge of the graph and tell it to navigate efficiently to specific landmarks. But for now we'll stop here, and appreciate the aesthetic differences in these few exploration styles.
+        There's a lot of ways we could build on this bias towards novelty to get more realistic looking walks. We culd add a bias towards popular locations, force the walk to start and stop at the airport, or give the walker global knowledge of the graph and tell it to navigate efficiently to specific landmarks. But for now, we'll stop here, and appreciate the aesthetic differences in these few exploration styles.
 
         <h3>Other resources</h3>
         <ul>
