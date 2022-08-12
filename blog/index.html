@@ -569,13 +569,14 @@ layout: default
         fig, ax = ox.plot_graph_route(graph,
                                         route,
                                         node_size=0,
-                                        edge_linewidth=2,
-                                        edge_color='grey',
+                                        edge_linewidth=0.3,
+                                        edge_color='white',
                                         route_color="#EB8D43",
-                                        route_alpha=0.9,
+                                        route_linewidth=1.5,
+                                        route_alpha=1.0,
                                         orig_dest_size=0)
         </code></pre>
-        <img src="map/my_path.png" class="post_img" alt="A black background, with the all the roads in Iceland plotted in dark grey. An orange line traces my path through the country."></img>
+        <img src="map/my_path.png" class="post_img" width="80%" alt="A black background, with the all the roads in Iceland plotted in grey. An orange line traces my path through the country."></img>
 
         And here we have a visualization of my vacation. 
         It's also important to note some limitations in this visualization. This method requires snapping to a road network. This might get incorrect locations at times when I was not on a true road, like on hikes or boats. Additionally, the shortest path between two points might not be the path that I took. This can lead to wrong data especially in cases where I travelled far between Google's recordings.
@@ -664,7 +665,6 @@ layout: default
         <p>This bias towards novelty does a little better. Now, we much more easily get out of the city, and even get to a different part of the island. But the areas it visits are still more densely explored than mine, and I stil get more coverage of the island as whole.
         </p>
         There's a lot of ways we could build on this bias towards novelty to get more realistic looking walks. We culd add a bias towards popular locations, force the walk to start and stop at the airport, or give the walker global knowledge of the graph and tell it to navigate efficiently to specific landmarks. But for now, we'll stop here, and appreciate the aesthetic differences in these few exploration styles.
-
         <h3>Other resources</h3>
         <ul>
             <li>This project was inspired by <a class="ext" href="https://twitter.com/IvaBrunec/status/1536141712426409985">this twitter post </a> by Dr. Iva Brunec</li>
