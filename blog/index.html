@@ -8,7 +8,7 @@ layout: default
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script>
-  
+  <h2> Posts </h2>
   <ol class="toc-list" role="list">
     <li>
       <a href="#fl">
@@ -66,13 +66,14 @@ layout: default
 
         Below, you can see the number of posts associated with the most popular hashtags. San Francisco tags are in cool colors, and New York tags are in warm colors.
         
-        
+        <br>
         <div class="series_text">
             <img src="tattoo/ny_toptags.png" class="series_img" alt="A bar plot showing the top hashtags in New York. Hot colors and a higher y-axis position indicate more popular tags."></img>
         </div>
         <div class="series_text">
             <img src="tattoo/sf_toptags.png" class="series_img" alt="A bar plot showing the top hashtags in San Francisco. Cool colors and a higher y-axis position indicate more popular tags."></img>
         </div>
+        <br>
         A lot of the popular tags break down into a few categories. 
         <ul>
             <li><b>Artist location:</b> Artists include hashtags for nearby locations such as #brooklyn or #sanjose. These tags were probably originally something like #brooklyntattoo or #sanjosetattoo artist that got clipped in the hashtag cleaning process. It is also possible artists are making tattoos of these actual regions, though I think this is less likely.</li>
@@ -85,14 +86,14 @@ layout: default
 
         What about the biggest differences between cities? Below, we see the difference in the percentage of posts containing each tag, for each city.
         
-        
+        <br>
         <div class="series_text">
             <img src="tattoo/ny_gt_sf.png" class="series_img" alt="A bar plot showing the hashtags more popular in NY than SF. Hot colors and a higher y-axis position indicate more relative NY popularity."></img>
         </div>
         <div class="series_text">
             <img src="tattoo/sf_gt_ny.png" class="series_img" alt="A bar plot showing the hashtags more popular in SF than NY. Cool colors and a higher y-axis position indicate more relative SF popularity."></img>
         </div>
-        
+        <br>
         These separate into different categories.
         <ul>
             <li><b>Artist identity:</b> New York has a higher prevalence of both #queer and #qttr (which is an abbreviation for queer tattoo artist). Does this mean that there are more queer artists in New York? There are a few possible explanations. It is possible that there are more queer artists in NY, that queer artists in NY are more willing to self identify on social media, or that queer SF artists use different or more specific terminology.
@@ -118,17 +119,17 @@ layout: default
         You can also see the hierarchical structure of the nested groups overlayed on top in light blue.
         <h3>Network clusters of tattoo posts</h3>
         
-        
+        <br>
         <div class="series_text">New York
             <img src="tattoo/bp_ny_nsbm.png" class="post_img" style="width:80% !important;" alt="A graph of the community structure of NY tattoo Instagram posts. Thousands of nodes are shown on the right (hashtags) and left (nodes) sides of the plot, with spatially neighboring nodes in the same group having the same color. Edges connecting the two sides meet in the middle of plot, giving the graph an hourglass shape."></img>
         </div>
         <div class="series_text">San Fransisco
             <img src="tattoo/bp_sf_nsbm.png" class="post_img" style="width:80% !important;" alt="A graph of the community structure of SF tattoo Instagram posts. Thousands of nodes are shown on the right (hashtags) and left (nodes) sides of the plot, with spatially neighboring nodes in the same group having the same color. Edges connecting the two sides meet in the middle of plot, giving the graph an hourglass shape."></img>
         </div>
-
+        <br>
         There are some prominent differences between the grouping structure of the two cities.
        
-       
+        <br>
         New York
         <ol>
             <li>Level 1: 2 groups</li>
@@ -158,21 +159,22 @@ layout: default
         We can now pick a level with relatively few groups (Level 4) and visualize the different hashtags in each group. If hashtags are in the same group, that means that there is some overlap in the posts containing those tags.
         In the plots below, we can make word clouds to represent each group in level 4. The size of the word indicates the number of posts in the group that have the hashtag, and the size of the word cloud indicates the total number of posts in the group. The color indicates nothing, it's just for readability.
 
-
+        <br>
         <div class="series_text">New York
             <img src="tattoo/ny_comm.png" class="series_img" style="width:80% !important;" alt="Several rectangular word clouds of varying areas, with words in hot colors."></img>
         </div>
         <div class="series_text">San Fransisco
             <img src="tattoo/sf_comm.png" class="series_img" style="width:80% !important;" alt="Several rectangular word clouds of varying areas, with words in cool colors."></img>
         </div>
-        
+        <br>
         We can also see some interesting differences in this visualization. New York has communities that are more evenly sized, while San Francisco has are more small groups. 
 
         Lastly, we can look at a finer scale and visualize the hashtags contained in some of the smaller communities. 
         
+        <br>
         We get some communities that are expected:
 
-
+        <br>
         <div class="series_text">Cats and Pets
             <img src="tattoo/cats.png" class="series_img" alt="A word cloud containing words like mainecoon and kitty"></img>
         </div>
@@ -194,7 +196,7 @@ layout: default
 
         Others that are less expected, but show consistent themes:
 
-
+        <br>
         <div class="series_text">Agriculture
             <img src="tattoo/agriculture.png" class="series_img" alt="A word cloud containing words like farming, fruits, and tarrarium"></img>
         </div>
@@ -216,7 +218,7 @@ layout: default
 
         And lastly, some that show some confusing and inspiring mixes of topics:
 
-
+        <br>
         <div class="series_text">Psychedelic cheese
             <img src="tattoo/psyc_cheese.png" class="series_img" alt="A word cloud containing words like cheeselover and psychedelic"></img>
         </div>
