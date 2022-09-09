@@ -65,6 +65,8 @@ layout: default
         Here we're going to throw out all this information except the hashtags. We now have bunch of posts, and all the tags used to describe them.
 
         Below, you can see the number of posts associated with the most popular hashtags. San Francisco tags are in cool colors, and New York tags are in warm colors.
+        
+        
         <div class="series_text">
             <img src="tattoo/ny_toptags.png" class="series_img" alt="A bar plot showing the top hashtags in New York. Hot colors and a higher y-axis position indicate more popular tags."></img>
         </div>
@@ -82,12 +84,15 @@ layout: default
         One notable omission to me was hashtags about tattoo locations. While there are clearly more popular tattoo placements (#wristtatoo vs #facetattoo), no placements end up in the top 10. This is likely because many posts include a mixture of finished pieces and artwork that could theoretically end up anywhere.
 
         What about the biggest differences between cities? Below, we see the difference in the percentage of posts containing each tag, for each city.
+        
+        
         <div class="series_text">
             <img src="tattoo/ny_gt_sf.png" class="series_img" alt="A bar plot showing the hashtags more popular in NY than SF. Hot colors and a higher y-axis position indicate more relative NY popularity."></img>
         </div>
         <div class="series_text">
             <img src="tattoo/sf_gt_ny.png" class="series_img" alt="A bar plot showing the hashtags more popular in SF than NY. Cool colors and a higher y-axis position indicate more relative SF popularity."></img>
         </div>
+        
         These separate into different categories.
         <ul>
             <li><b>Artist identity:</b> New York has a higher prevalence of both #queer and #qttr (which is an abbreviation for queer tattoo artist). Does this mean that there are more queer artists in New York? There are a few possible explanations. It is possible that there are more queer artists in NY, that queer artists in NY are more willing to self identify on social media, or that queer SF artists use different or more specific terminology.
@@ -112,14 +117,18 @@ layout: default
         Below, we can see the network visualization of our two tattoo post networks. The left hand side shows posts, and the right hand side shows hashtags. The colors correspond to the different groups (at the most fine-grained level).
         You can also see the hierarchical structure of the nested groups overlayed on top in light blue.
         <h3>Network clusters of tattoo posts</h3>
+        
+        
         <div class="series_text">New York
-            <img src="tattoo/bp_ny_nsbm.png" class="series_img" style="width:80% !important;" alt="A graph of the community structure of NY tattoo Instagram posts. Thousands of nodes are shown on the right (hashtags) and left (nodes) sides of the plot, with spatially neighboring nodes in the same group having the same color. Edges connecting the two sides meet in the middle of plot, giving the graph an hourglass shape."></img>
+            <img src="tattoo/bp_ny_nsbm.png" class="post_img" style="width:80% !important;" alt="A graph of the community structure of NY tattoo Instagram posts. Thousands of nodes are shown on the right (hashtags) and left (nodes) sides of the plot, with spatially neighboring nodes in the same group having the same color. Edges connecting the two sides meet in the middle of plot, giving the graph an hourglass shape."></img>
         </div>
         <div class="series_text">San Fransisco
-            <img src="tattoo/bp_sf_nsbm.png" class="series_img" style="width:80% !important;" alt="A graph of the community structure of SF tattoo Instagram posts. Thousands of nodes are shown on the right (hashtags) and left (nodes) sides of the plot, with spatially neighboring nodes in the same group having the same color. Edges connecting the two sides meet in the middle of plot, giving the graph an hourglass shape."></img>
+            <img src="tattoo/bp_sf_nsbm.png" class="post_img" style="width:80% !important;" alt="A graph of the community structure of SF tattoo Instagram posts. Thousands of nodes are shown on the right (hashtags) and left (nodes) sides of the plot, with spatially neighboring nodes in the same group having the same color. Edges connecting the two sides meet in the middle of plot, giving the graph an hourglass shape."></img>
         </div>
 
         There are some prominent differences between the grouping structure of the two cities.
+       
+       
         New York
         <ol>
             <li>Level 1: 2 groups</li>
@@ -149,6 +158,7 @@ layout: default
         We can now pick a level with relatively few groups (Level 4) and visualize the different hashtags in each group. If hashtags are in the same group, that means that there is some overlap in the posts containing those tags.
         In the plots below, we can make word clouds to represent each group in level 4. The size of the word indicates the number of posts in the group that have the hashtag, and the size of the word cloud indicates the total number of posts in the group. The color indicates nothing, it's just for readability.
 
+
         <div class="series_text">New York
             <img src="tattoo/ny_comm.png" class="series_img" style="width:80% !important;" alt="Several rectangular word clouds of varying areas, with words in hot colors."></img>
         </div>
@@ -161,54 +171,60 @@ layout: default
         Lastly, we can look at a finer scale and visualize the hashtags contained in some of the smaller communities. 
         
         We get some communities that are expected:
+
+
         <div class="series_text">Cats and Pets
-            <img src="tattoo/cats.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like mainecoon and kitty"></img>
+            <img src="tattoo/cats.png" class="series_img" alt="A word cloud containing words like mainecoon and kitty"></img>
         </div>
         <div class="series_text">Black and grey animals
-            <img src="tattoo/animals.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like blackandgrey, animal specialist, and blackandgreyhorse"></img>
+            <img src="tattoo/animals.png" class="series_img" alt="A word cloud containing words like blackandgrey, animal specialist, and blackandgreyhorse"></img>
         </div>
         <div class="series_text">Flowers and Skulls
-            <img src="tattoo/skulls.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like crysanthemum and freehandskull"></img>
+            <img src="tattoo/skulls.png" class="series_img" alt="A word cloud containing words like crysanthemum and freehandskull"></img>
         </div>
         <div class="series_text">Pokemon
-            <img src="tattoo/pokemon.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like pokemonfan and firetypepokemon"></img>
+            <img src="tattoo/pokemon.png" class="series_img" alt="A word cloud containing words like pokemonfan and firetypepokemon"></img>
         </div>
         <div class="series_text">Neotraditional tattoos with white ink
-            <img src="tattoo/whiteink.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like whiteink and neotrad"></img>
+            <img src="tattoo/whiteink.png" class="series_img" alt="A word cloud containing words like whiteink and neotrad"></img>
         </div>
         <div class="series_text">Space
-            <img src="tattoo/space.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like galaxy and spacestuff"></img>
+            <img src="tattoo/space.png" class="series_img" alt="A word cloud containing words like galaxy and spacestuff"></img>
         </div>
 
         Others that are less expected, but show consistent themes:
+
+
         <div class="series_text">Agriculture
-            <img src="tattoo/agriculture.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like farming, fruits, and tarrarium"></img>
+            <img src="tattoo/agriculture.png" class="series_img" alt="A word cloud containing words like farming, fruits, and tarrarium"></img>
         </div>
         <div class="series_text">Ghost type pokemon
-            <img src="tattoo/ghosttype.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like ganghar and ghosttype"></img>
+            <img src="tattoo/ghosttype.png" class="series_img" alt="A word cloud containing words like ganghar and ghosttype"></img>
         </div>
         <div class="series_text">Animal prints
-            <img src="tattoo/animal_print.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like zebraprint and patterns and designs"></img>
+            <img src="tattoo/animal_print.png" class="series_img" alt="A word cloud containing words like zebraprint and patterns and designs"></img>
         </div>
         <div class="series_text">Cartoon portraits
-            <img src="tattoo/cartoon.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like portrait, bobsburgers, and invaderzim"></img>
+            <img src="tattoo/cartoon.png" class="series_img" alt="A word cloud containing words like portrait, bobsburgers, and invaderzim"></img>
         </div>
         <div class="series_text">Chickens
-            <img src="tattoo/chickens.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like ilovemypetchicken"></img>
+            <img src="tattoo/chickens.png" class="series_img" alt="A word cloud containing words like ilovemypetchicken"></img>
         </div>
         <div class="series_text">Tattoo artists giving themselves ocean themed leg tattoos
-            <img src="tattoo/self_leg.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like selftat, leg, and savethesharks"></img>
+            <img src="tattoo/self_leg.png" class="series_img" alt="A word cloud containing words like selftat, leg, and savethesharks"></img>
         </div>
 
         And lastly, some that show some confusing and inspiring mixes of topics:
+
+
         <div class="series_text">Psychedelic cheese
-            <img src="tattoo/psyc_cheese.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like cheeselover and psychedelic"></img>
+            <img src="tattoo/psyc_cheese.png" class="series_img" alt="A word cloud containing words like cheeselover and psychedelic"></img>
         </div>
         <div class="series_text">Batman (the Ben Affleck one) and plants
-            <img src="tattoo/bat_plant.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like batman and plantlover"></img>
+            <img src="tattoo/bat_plant.png" class="series_img" alt="A word cloud containing words like batman and plantlover"></img>
         </div>
         <div class="series_text">Indi(ana Jones) music
-            <img src="tattoo/indi_music.png" class="series_img" style="width:30% !important;" alt="A word cloud containing words like musicnote and indianajones"></img>
+            <img src="tattoo/indi_music.png" class="series_img" alt="A word cloud containing words like musicnote and indianajones"></img>
         </div>
 
         <h4>Conclusions</h4>
