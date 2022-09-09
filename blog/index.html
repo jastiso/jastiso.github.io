@@ -9,7 +9,7 @@ layout: default
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script>
   <h2> Posts </h2>
-  <ol class="toc-list" role="list">
+  <ul class="toc-list" role="list">
     <li>
       <a href="#fl">
         <span class="title">Federated learning for clinical applications<span class="leaders" aria-hidden="true"></span></span>
@@ -30,7 +30,7 @@ layout: default
         <span class="title">Double/debiased machine learning<span class="leaders" aria-hidden="true"></span></span>
       </a>
     </li>
-  </ol>
+  </ul>
 
 
 <div class="row">
@@ -118,19 +118,18 @@ layout: default
         Below, we can see the network visualization of our two tattoo post networks. The left hand side shows posts, and the right hand side shows hashtags. The colors correspond to the different groups (at the most fine-grained level).
         You can also see the hierarchical structure of the nested groups overlayed on top in light blue.
         <h3>Network clusters of tattoo posts</h3>
-        
+        <b>New York</b>
         <br>
-        <div class="series_text">New York
             <img src="tattoo/bp_ny_nsbm.png" class="post_img" style="width:80% !important;" alt="A graph of the community structure of NY tattoo Instagram posts. Thousands of nodes are shown on the right (hashtags) and left (nodes) sides of the plot, with spatially neighboring nodes in the same group having the same color. Edges connecting the two sides meet in the middle of plot, giving the graph an hourglass shape."></img>
-        </div>
-        <div class="series_text">San Fransisco
+        <br>
+        <b>San Fransisco</b>
+        <br>    
             <img src="tattoo/bp_sf_nsbm.png" class="post_img" style="width:80% !important;" alt="A graph of the community structure of SF tattoo Instagram posts. Thousands of nodes are shown on the right (hashtags) and left (nodes) sides of the plot, with spatially neighboring nodes in the same group having the same color. Edges connecting the two sides meet in the middle of plot, giving the graph an hourglass shape."></img>
-        </div>
         <br>
         There are some prominent differences between the grouping structure of the two cities.
        
         <br>
-        New York
+        <b>New York</b>
         <ol>
             <li>Level 1: 2 groups</li>
             <li>Level 2: 3 groups</li>
@@ -142,7 +141,7 @@ layout: default
             <li>Level 8: 28282 groups</li>
         </ol>
 
-        San Francisco
+        <b>San Fransisco</b>
         <ol>
             <li>Level 1: 2 groups</li>
             <li>Level 2: 5 groups</li>
@@ -160,12 +159,12 @@ layout: default
         In the plots below, we can make word clouds to represent each group in level 4. The size of the word indicates the number of posts in the group that have the hashtag, and the size of the word cloud indicates the total number of posts in the group. The color indicates nothing, it's just for readability.
 
         <br>
-        <div class="series_text">New York
+        <b>New York</b>
+        <br>
             <img src="tattoo/ny_comm.png" class="series_img" style="width:80% !important;" alt="Several rectangular word clouds of varying areas, with words in hot colors."></img>
-        </div>
-        <div class="series_text">San Fransisco
+        <br>
+        <b>San Fransisco</b>
             <img src="tattoo/sf_comm.png" class="series_img" style="width:80% !important;" alt="Several rectangular word clouds of varying areas, with words in cool colors."></img>
-        </div>
         <br>
         We can also see some interesting differences in this visualization. New York has communities that are more evenly sized, while San Francisco has are more small groups. 
 
@@ -193,7 +192,7 @@ layout: default
         <div class="series_text">Space
             <img src="tattoo/space.png" class="series_img" alt="A word cloud containing words like galaxy and spacestuff"></img>
         </div>
-
+        <br>
         Others that are less expected, but show consistent themes:
 
         <br>
@@ -215,7 +214,7 @@ layout: default
         <div class="series_text">Tattoo artists giving themselves ocean themed leg tattoos
             <img src="tattoo/self_leg.png" class="series_img" alt="A word cloud containing words like selftat, leg, and savethesharks"></img>
         </div>
-
+        <br>
         And lastly, some that show some confusing and inspiring mixes of topics:
 
         <br>
