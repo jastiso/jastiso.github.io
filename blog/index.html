@@ -61,7 +61,7 @@ layout: default
         <h3>Data Privacy and Governance in Clinical Machine Learning</h3>
 
             Clinical machine learning seeks to ethically improve patients’ outcomes in healthcare settings using complex data and statistical methods. Generally, many of these statistical methods involve learning associations between various real-world measures – like the risk of disease X and the amount of protein Y. The accuracy of these learned associations tends to increase as you get more data. Additionally, newly developed methods with the potential to solve unique problems, also tend to require more data to get accurate results. 
-            Likewise, models targetting rare conditions require, unsurprisingly, even more data. This is not to say that data is the only issue facing clinical machine learning, but it certainly an important factor in the field's progress. 
+            Likewise, models targeting rare conditions require, unsurprisingly, even more data. This is not to say that data is the only issue facing clinical machine learning, but it certainly an important factor in the field's progress. 
             However, the process of collecting storing, and distributing data, especially medical data, is extremely difficult and often not incentivized. We’re going to briefly discuss two important aspects of the data ecosystem -- data privacy, and data governance. We’ll then describe a technical advancement in model training – federated learning – that allows for model development in an ecosystem focused on maintaining decentralized data governance <a href="#refs">[1]</a>.
             <br>
             <b>Data Privacy:</b> Medical data are often highly sensitive in nature and breaches in privacy could cause significant harm to patients. Additionally, it is becoming clear that simply anonymizing data – i.e. removing patient names and unique identifiers – might not be enough to ensure privacy. 
@@ -77,7 +77,7 @@ layout: default
             Federated learning achieves decentralization by training individual models at each participating institution and then aggregating the parameters from each local model to create one global model. This way, data are never passed between sites, only parameters are. 
             Before going into a bit more depth on the definition, lets visualize a typical centralized learning pipeline (visualization adapted from <a href="#refs">[1]</a>).
             <img src="fl/cl.png" class="post_img" alt=""></img>
-            Data from multiple hostpitals (green squares, called 'nodes') would need to be shared with some central server (yellow square, called 'aggregate node' or 'central node'). Assuming that was successful, you could then train a model on data from every site at that centralized server. Seems simple, but we’ve already discussed why data sharing might not be a sustainable solution.
+            Data from multiple hospitals (green squares, called 'nodes') would need to be shared with some central server (yellow square, called 'aggregate node' or 'central node'). Assuming that was successful, you could then train a model on data from every site at that centralized server. Seems simple, but we’ve already discussed why data sharing might not be a sustainable solution.
             Let instead look at the schematic for federated learning (visualization adapted from <a href="#refs">[1]</a>). 
             <img src="fl/fl.png" class="post_img" alt=""></img>
             The first step is for the central server to share a model with each node. Then, models are trained locally before sending their parameters back to the central server. 
@@ -86,7 +86,7 @@ layout: default
 
             $$ \min_{\phi} L(X;\phi)$$
 
-            Typically, the goal is to minimize some loss function \(L\) over different parameters \(\phi\). Now, we can expand this loss function to accomodate a decentralized framework
+            Typically, the goal is to minimize some loss function \(L\) over different parameters \(\phi\). Now, we can expand this loss function to accommodate a decentralized framework
 
             $$ L(X;\phi) = \sum^{K}_{k=1}w_k L_k(X_k;\phi_k) $$
 
@@ -100,7 +100,7 @@ layout: default
                 <tr>
                 <th>Decision or Consideration</th>
                 <th>Description</th>
-                <th>Standard Soluition in Clinical Setting</th>
+                <th>Standard Solution in Clinical Setting</th>
                 </tr>
                 <tr>
                 <td>Nodes and Topology</td>
@@ -208,7 +208,7 @@ layout: default
                     </div>
                     <ul>
                         <li>Probably easy to use if you already work with tensorflow</li>
-                        <li>No built in support for privacy or non-IID data</li>
+                        <li>No built-in support for privacy or non-IID data</li>
                     </ul>
                 </li>
                 <li><a href="https://fate.fedai.org/">FATE</a>
@@ -227,13 +227,13 @@ layout: default
             <ul>
                 <li>Federated Learning promises a flexible, decentralized way to train machine learning algorithms. Widerspread adoption of federated learning could make modeling with more sophisticated methods, or for more niche populations feasible</li>
                 <li>Federated learning is presented as a solution to data governance and privacy issues that make sharing data difficult. While the method has clear benefits over centralized learning, data privacy, and especially data governance, will likely still present issues moving forward.
-                    As discussed in the post, federated learning applications are not a complete solution to security issues, and will likely require more protections in any real-world application. Additionally, the incentives that 
+                    As discussed in the post, federated learning applications are not a complete solution to security issues and will likely require more protections in any real-world application. Additionally, the incentives that 
                     make it harder for institutions to contribute data to data lakes might also make it harder to offer access for federated learning projects. If you spent a lot of money collecting a rare dataset, you might want to
                     get the first (or second, or third) crack at any modeling projects using that dataset. Essentially, I do not think federated learning can serve as a substitute for incentivizing data sharing or protecting/compensating data curators.
                 </li>
-                <li>Starting a federated learning project requires many decisions and considerations. Decisions with the least clear solutions are: deciding on a common data structure across sites; and deciding how to deal with non-IID data distributions. Both reviews cited in this post 
+                <li>Starting a federated learning project requires many decisions and considerations. Decisions with the least clear solutions are those involving data standardization across sites and those involving how to deal with non-IID data distributions. Both reviews cited in this post 
                     recognize that these are important issues<a href="#refs">[1,3]</a>, but stop short of providing clear recommendations. I think the method would be more accessible and more likely to be used responsibly if some of the packages produced pandas-profiler style reports
-                    of data distributions across sites, and provided more support for implementing solutions.
+                    of data distributions across sites and provided more support for implementing solutions.
                 </li>
             </ul>
 
