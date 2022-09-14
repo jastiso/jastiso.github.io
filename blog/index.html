@@ -8,6 +8,23 @@ layout: default
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.0.3/highlight.min.js"></script>
   <script>hljs.initHighlightingOnLoad();</script>
+  <style>
+    table {
+      font-family: arial, sans-serif;
+      border-collapse: collapse;
+      width: 100%;
+    }
+    
+    td, th {
+      border: 1px solid #dddddd;
+      text-align: left;
+      padding: 8px;
+    }
+    
+    tr:nth-child(even) {
+      background-color: #dddddd;
+    }
+    </style>
   <h2> Posts </h2>
   <ul class="toc-list" role="list">
     <li>
@@ -175,8 +192,8 @@ layout: default
             If you’ve thought about the design of your federated learning pipeline and are ready to implement it, there are a few free packages in Python that can help you get your system up and running
             <ol>
                 <li><a href="https://github.com/OpenMined/PySyft">PySyft</a>
-                    <div class="series_text">A screenshot from a PySyft tutorial
-                        <img src="fl/pysyft.png" class="series_img" alt=""></img>
+                    <div class="series_text" style="width:80% !important">A screenshot from a PySyft tutorial
+                        <img src="fl/pysyft.png" class="series_img" style="width:80% !important"></img>
                     </div>
                     <ul>
                         <li>Supports encryption and differential privacy</li>
@@ -186,8 +203,8 @@ layout: default
                     </ul>
                 </li>
                 <li><a href="https://www.tensorflow.org/federated/federated_learning">Tensorflow</a>
-                    <div class="series_text">A screenshot from a tensorflow tutorial
-                        <img src="fl/tf.png" class="series_img" alt=""></img>
+                    <div class="series_text" style="width:80% !important">A screenshot from a tensorflow tutorial
+                        <img src="fl/tf.png" class="series_img" style="width:80% !important"></img>
                     </div>
                     <ul>
                         <li>Probably easy to use if you already work with tensorflow</li>
@@ -195,8 +212,8 @@ layout: default
                     </ul>
                 </li>
                 <li><a href="https://fate.fedai.org/">FATE</a>
-                    <div class="series_text">A screenshot from a FATE tutorial
-                        <img src="fl/fate.png" class="series_img" alt=""></img>
+                    <div class="series_text" style="width:80% !important">A screenshot from a FATE tutorial
+                        <img src="fl/fate.png" style="width:80% !important" class="series_img"></img>
                     </div>
                     <ul>
                         <li>No support for non-IID data (though nothing is stopping you from adding your own resampling function to the pipeline)</li>
@@ -206,7 +223,7 @@ layout: default
                 </li>
             </ol>
 
-            <h3>Conclusions and commentary</h3>
+            <h3>Conclusions and Commentary</h3>
             <ul>
                 <li>Federated Learning promises a flexible, decentralized way to train machine learning algorithms. Widerspread adoption of federated learning could make modeling with more sophisticated methods, or for more niche populations feasible</li>
                 <li>Federated learning is presented as a solution to data governance and privacy issues that make sharing data difficult. While the method has clear benefits over centralized learning, data privacy, and especially data governance, will likely still present issues moving forward.
