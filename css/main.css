@@ -71,6 +71,10 @@ img.paperimg {
     overflow: auto;
 }
 
+.card{
+    padding-block-end: 200px;
+}
+
 img.floatr{
     float: right;
 }
