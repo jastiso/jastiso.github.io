@@ -10,14 +10,14 @@ layout: default
   <script>hljs.initHighlightingOnLoad();</script>
   <h2> Posts </h2>
   <ul class="toc-list" role="list">
-    <!--li>
+    <li>
       <a href="#fl">
         <span class="title">Federated learning for clinical applications<span class="leaders" aria-hidden="true"></span></span>
       </a>
-    </li--->
+    </li>
     <li>
       <a href="#tat">
-        <span class="title">Coastal differences in tattoo pieces <span class="leaders" aria-hidden="true"></span></span>
+        <span class="title">Coastal differences in artists' Instgram captions <span class="leaders" aria-hidden="true"></span></span>
       </a>
     </li>
     <li>
@@ -36,18 +36,210 @@ layout: default
 <div class="row">
   <div class="leftcolumn"> 
     
-    <!---div class="card" id="fl">
+    <div class="card" id="fl">
         <h2>Federated learning for clinical applications</h2>
         <h5>A primer for the data-governance/privacy curious, October, 2022</h5>
-        <img src="fl/iceland_road.jpg" class="title_img" alt="A photograph of a branch of a tree, with yellow and orang leaves"></img>
+        <img src="fl/lotus.jpg" class="title_img" alt="A photograph filled with white lotuses, with a single pink lotus in the center"></img>
+
+        <h3>Data Privacy and Governance in Clinical Machine Learning</h3>
+
+            Clinical machine learning seeks to ethically improve patients’ outcomes in healthcare settings using complex data and statistical methods. Generally, many of these statistical methods involve learning associations between various real-world measures – like the risk of disease X and the amount of protein Y. The accuracy of these learned associations tends to increase as you get more data. Additionally, newly developed methods with the potential to solve unique problems, also tend to require more data to get accurate results. 
+            Likewise, models targetting rare conditions require, unsurprisingly, even more data. This is not to say that data is the only issue facing clinical machine learning, but it certainly an important factor in the field's progress. 
+            However, the process of collecting storing, and distributing data, especially medical data, is extremely difficult and often not incentivized. We’re going to briefly discuss two important aspects of the data ecosystem -- data privacy, and data governance. We’ll then describe a technical advancement in model training – federated learning – that allows for model development in an ecosystem focused on maintaining decentralized data governance <a href="#refs">[1]</a>.
+            <br>
+            <b>Data Privacy:</b> Medical data are often highly sensitive in nature and breaches in privacy could cause significant harm to patients. Additionally, it is becoming clear that simply anonymizing data – i.e. removing patient names and unique identifiers – might not be enough to ensure privacy. 
+            We now know that patient faces can be reconstructed from medical scans, making the patient's identifying features and the features used in modeling inseparable in these applications<a href="#refs">[2]</a>. These issues make hospitals hesitant to share data, even with other hospitals, and put high security requirements on any server seeking to host shared data from multiple sources.
+            <br>
+            <b>Data Governance:</b> Collecting, storing and maintaining large datasets takes massive amounts of work. In academic settings, providing these datasets as a resource to the public is not incentivized; time spent writing original research papers is considered more useful. Similarly in industry or non-profit settings, institutions often want to retain control of their data efforts because of the resources invested into them. While it would also benefit progress to incentivize sharing, finding ways to work within current incentive structures for data governance can help build larger multisite datasets quickly.
+            <br>
+            Both data privacy and data governance are necessary parts of the data ecosystem that unfortunately disincentivize institutions to share their data or contribute them to larger data lakes. Making them both an important safeguard and a barrier to progress. 
+            If there were a way to decentralize model training such that institutions could retain control of their data, and modelers could incorporate that data into their work, clinical applications could advance without sacrificing privacy or drastically changing incentives. This decentralization is the promise of federated learning.
+
+            <h3>Federated Learning Definition</h3>
+
+            Federated learning achieves decentralization by training individual models at each participating institution and then aggregating the parameters from each local model to create one global model. This way, data are never passed between sites, only parameters are. 
+            Before going into a bit more depth on the definition, lets visualize a typical centralized learning pipeline (visualization adapted from <a href="#refs">[1]</a>).
+            <img src="fl/cl.png" class="post_img" alt=""></img>
+            Data from multiple hostpitals (green squares, called 'nodes') would need to be shared with some central server (yellow square, called 'aggregate node' or 'central node'). Assuming that was successful, you could then train a model on data from every site at that centralized server. Seems simple, but we’ve already discussed why data sharing might not be a sustainable solution.
+            Let instead look at the schematic for federated learning (visualization adapted from <a href="#refs">[1]</a>). 
+            <img src="fl/fl.png" class="post_img" alt=""></img>
+            The first step is for the central server to share a model with each node. Then, models are trained locally before sending their parameters back to the central server. 
+            The central server will then aggregate all the parameters, before sending the updated model back out to each hospital. This repeats until the model is trained.
+            To formalize this definition, let’s think about a standard loss function from a machine learning model.
+
+            $$ \min_{\phi} L(X;\phi)$$
+
+            Typically, the goal is to minimize some loss function \(L\) over different parameters \(\phi\). Now, we can expand this loss function to accomodate a decentralized framework
+
+            $$ L(X;\phi) = \sum^{K}_{k=1}w_k L_k(X_k;\phi_k) $$
+
+            Here \(k\) indexes each local data source. Now, we are simply minimizing the weighted sum of local losses. Typically, this weighting \(w_k\) is given by the fraction of observations present at each hospital, but different weighting schemes can serve different purposes (more on this later).
+            It’s important to note that federated learning is huge field, with lots of different flavors and variations. What was described above, and what will be discussed in the remainder of this post is a specific kind that seems natural to many clinical applications. Specifically, these applications involve aggregating data from multiple hospitals, such that each node is a hospital, and each hospital stores mostly the same variables. To facilitate future searches, this method is called centralized federated learning (which is confusing, given that the alternative to federated learning is called centralized learning), using the FedAvg algorithm with a hub and spoke topology.
+            <h3>Decisions and Considerations when Implementing Federated Learning</h3>
+            Before implementing any federated learning system, there are some precursor decisions you’ll have to make, as well some features of your data that should be quantified.
+             Some of these decisions have standard solutions for the generic medical context (i.e. multiple hospitals, with mostly the same features, but different observations). For the few considerations that don’t have standard solutions, we’ll go over a set of common options in more detail.
+
+            <table>
+                <tr>
+                <th>Decision or Consideration</th>
+                <th>Description</th>
+                <th>Standard Soluition in Clinical Setting</th>
+                </tr>
+                <tr>
+                <td>Nodes and Topology</td>
+                <td>How many nodes? Will there be aggregate nodes? How will they be connected?</td>
+                <td>Few nodes (each node is a hospitals), all connected to one aggregate</td>
+                </tr>
+                <tr>
+                <td>Updates</td>
+                <td>How many nodes will participate in each update?</td>
+                <td>All connected nodes will participate in updates</td>
+                </tr>
+                <tr>
+                    <td>Data structure</td>
+                    <td>Naming conventions, file structures, etc.</td>
+                    <td>None, because it depends so much on the specific problem you’re working with. Here’s an example from neuroscience called <a href="https://github.com/bids-standard/">BIDS</a></td>
+                </tr>
+                <tr>
+                    <td>Data partitions</td>
+                    <td>Are features, labels, or observations shared across nodes?</td>
+                    <td>Each node will have different observations, but at least some shared features and labels</td>
+                </tr>
+                <tr>
+                    <td>Data distribution</td>
+                    <td>How are features and labels distributed across nodes, and how will this influence the learning algorithm?</td>
+                    <td>Multiple (see below)</td>
+                </tr>
+                <tr>
+                    <td>Privacy measures</td>
+                    <td>What extra privacy measures will be taken, if any?</td>
+                    <td>Multiple (see below)</td>
+                </tr>
+                <tr>
+                    <td>Hyper parameters</td>
+                    <td>Weighting coefficients (wk), loss function, etc.</td>
+                    <td>Weighting by the number of observations, but there are some interesting and useful variants (see dealing with non-IID data for some examples). All other parameters determined similarly to centralized learning</td>
+                </tr>
+            </table>
+
+
+            We will discuss the two issues with multiple solutions: data distribution (specifically, non-independent, or non-IID data); and additional privacy.
+            <br>
+            <b>Dealing with Non-IID Data:</b> The biggest technical issue on this list is probably 'data distributions'. The standard FedAvg algorithm discussed here is not guaranteed to work well when the data are not identically distributed (non-IID) across nodes – and is rarely IID across nodes in real-world settings. Quantifying how the distributions of data differ and adapting the algorithm to deal with those distributions is an important part of the process. 
+
+            Overall, there are three big ways that data can differ across nodes. Nodes can have missing values, nodes can have different distributions or proportions of values, or the same values can lead to different predictions in different contexts. When reviewing the literature, it seems like each of these different data situations has a unique name, however not everyone seems to agree on what that name is.
+             I think you can understand everything in this post without the names, but for the purpose of searching the field, here are the common names I observed for these different data situations:
+            <ol>
+                <li>Feature skew: some features not present. i.e. one hospital does not record heart rate.</li>
+                <li>Label distribution skew: some labels are not present. i.e. building a model to predict COVID when one hospital has no patients with COVID.</li>
+                <li>Concept Shift: the same features lead to a different label. i.e. building a model to predict gut health from cheese consumption with hospitals in Asia and Europe. Since lactose intolerance is more common in Asia, the 'cheese' feature would lead to different labels at different hospitals</li> 
+                <li>Concept Drift: or the same label arises from different features. i.e. building a model to predict anxiety levels in hospitals with patients from different socioeconomic levels. While both hospitals might have patients with anxiety, the things causing that anxiety might differ. </li>
+                <li>Quantity skew: labels have different distributions (imbalanced). i.e. building a model to predict COVID when one hospital has 40% of patients test positive, and another has 2%.</li>
+                <li>Prior probability shift: features have different distributions. i.e. using age as a predictor when data come from children's hospitals and general hospitals.</li>
+                <li>Unbalancedness: vastly different numbers of observations. This one is self explanatory.</li>
+            </ol>
+
+            A survey of clinical applications of federated learning before the year 2022 quantified how many papers reported each of the first 5 distributions above. The most common distribution reported was quantity skew, or imbalanced labels across nodes (18/24 papers)<a href="#refs">[3]</a>. Because of its ubiquity, we’re going to go over some common solutions as well.
+            <ol>
+                <li>Balancing training data: each node can implement its own resampling scheme, such as SMOTE or GAN resampling. In the same review mentioned above, this was the most popular method for addressing skew <a href="#refs">[3]</a>, though the review only discussed the first three methods in this list. </li>
+                <li>Adaptive hyperparameters: using loss functions and weighting coefficients that are specific to each node.</li>
+                <ul>
+                    <li>LoAdaBoost: one specific example that boosts the training of weak nodes by forcing the loss function to fall below some threshold before they contribute to the aggregate<a href="#refs">[4]</a>.</li>
+                </ul>
+                <li>Domain adaptation: Use meta-training to determine how to combine predictors trained on various domains, similar to transfer learning<a href="#refs">[5]</a>.</li>
+                <li>Share data: share a small amount of data or summary statistics from data to fill in missing values and supplement skewed distributions</li>
+                <li>Normalization: (only applied to deep learning models) group, rather than batch normalization helps with skewed labels<a href="#refs">[6]</a>.</li>
+                <li>Different algorithm: Federated learning based on dynamic regulation (FedDyn) algorithm can guarantee that the node losses converge to the global loss<a href="#refs">[7]</a>.</li>
+            </ol>
+
+            <br>
+            <b>Dealing with Privacy:</b> Despite federated learning being more secure than centralized methods, federated learning is not free from privacy risks. Bad actors with access to the model can still reverse engineer data from the model parameters, and therefore gain access to sensitive information. This issue is more pressing when not all the nodes can be trusted – like when nodes are users cell phones rather than hospitals. 
+            Because of this, about half of clinical federated learning papers do not use additional privacy protections<a href="#refs">[3]</a>.
+             However, if you’re interested in adding extra security, there are two ways that people tend to increase security: adding noise, and encryption.
+            <ol>
+                <li>Add noise: add noise to either the data, or the gradients
+                    <ul>
+                        <li>Differential privacy: a method of adding noise that ensures that model outputs are nearly identical even if any one data point is removed.</li>
+                    </ul>
+                </li>
+                <li>Encryption: encrypt the gradients or parameters that get sent back and forth</li>
+            </ol>
+
+            <!---h3>Examples of Clinical Federated Learning</h3>
+            <ol>
+                <li>Review (up to 2019) <a href="#refs">[2]</a></li>
+            </ol--->
+
+            <h3>Python Packages for Implementing Federated Learning</h3>
+
+            If you’ve thought about the design of your federated learning pipeline and are ready to implement it, there are a few free packages in Python that can help you get your system up and running
+            <ol>
+                <li><a href="https://github.com/OpenMined/PySyft">PySyft</a>
+                    <div class="series_text">A screenshot from a PySyft tutorial
+                        <img src="fl/pysyft.png" class="series_img" alt=""></img>
+                    </div>
+                    <ul>
+                        <li>Supports encryption and differential privacy</li>
+                        <li>Support for non-IID data (via sample sharing)</li> 
+                        <li>‘numpy-like’ interface (their words)</li>
+                        <li>Currently, they want users to work with the team on new applications</li>
+                    </ul>
+                </li>
+                <li><a href="https://www.tensorflow.org/federated/federated_learning">Tensorflow</a>
+                    <div class="series_text">A screenshot from a tensorflow tutorial
+                        <img src="fl/tf.png" class="series_img" alt=""></img>
+                    </div>
+                    <ul>
+                        <li>Probably easy to use if you already work with tensorflow</li>
+                        <li>No built in support for privacy or non-IID data</li>
+                    </ul>
+                </li>
+                <li><a href="https://fate.fedai.org/">FATE</a>
+                    <div class="series_text">A screenshot from a FATE tutorial
+                        <img src="fl/fate.png" class="series_img" alt=""></img>
+                    </div>
+                    <ul>
+                        <li>No support for non-IID data (though nothing is stopping you from adding your own resampling function to the pipeline)</li>
+                        <li>Supports encryption</li>
+                        <li>Pipeline package interface</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Conclusions and commentary</h3>
+            <ul>
+                <li>Federated Learning promises a flexible, decentralized way to train machine learning algorithms. Widerspread adoption of federated learning could make modeling with more sophisticated methods, or for more niche populations feasible</li>
+                <li>Federated learning is presented as a solution to data governance and privacy issues that make sharing data difficult. While the method has clear benefits over centralized learning, data privacy, and especially data governance, will likely still present issues moving forward.
+                    As discussed in the post, federated learning applications are not a complete solution to security issues, and will likely require more protections in any real-world application. Additionally, the incentives that 
+                    make it harder for institutions to contribute data to data lakes might also make it harder to offer access for federated learning projects. If you spent a lot of money collecting a rare dataset, you might want to
+                    get the first (or second, or third) crack at any modeling projects using that dataset. Essentially, I do not think federated learning can serve as a substitute for incentivizing data sharing or protecting/compensating data curators.
+                </li>
+                <li>Starting a federated learning project requires many decisions and considerations. Decisions with the least clear solutions are: deciding on a common data structure across sites; and deciding how to deal with non-IID data distributions. Both reviews cited in this post 
+                    recognize that these are important issues<a href="#refs">[1,3]</a>, but stop short of providing clear recommendations. I think the method would be more accessible and more likely to be used responsibly if some of the packages produced pandas-profiler style reports
+                    of data distributions across sites, and provided more support for implementing solutions.
+                </li>
+            </ul>
+
+            <h3 id="refs">References and Resources</h3>
+            <ol>
+                <li>Rieke, N., Hancox, J., Li, W., Milletarì, F., Roth, H. R., Albarqouni, S., Bakas, S., Galtier, M. N., Landman, B. A., Maier-Hein, K., Ourselin, S., Sheller, M., Summers, R. M., Trask, A., Xu, D., Baust, M., & Cardoso, M. J. (2020). <a href="https://doi.org/10.1038/s41746-020-00323-1">The future of digital health with federated learning.</a> Npj Digital Medicine, 3(1).</li>
+                <li>Schwarz, C. G., Kremers, W. K., Therneau, T. M., Sharp, R. R., Gunter, J. L., Vemuri, P., Arani, A., Spychalla, A. J., Kantarci, K., Knopman, D. S., Petersen, R. C., & Jack, C. R. (2019). <a href="https://www.nejm.org/doi/full/10.1056/NEJMc1908881">Identification of Anonymous MRI Research Participants with Face-Recognition Software.</a> New England Journal of Medicine, 381(17), 1684–1686.</li>
+                <li>Prayitno, Shyu, C. R., Putra, K. T., Chen, H. C., Tsai, Y. Y., Tozammel Hossain, K. S. M., Jiang, W., & Shae, Z. Y. (2021). <a href="https://www.mdpi.com/2076-3417/11/23/11191">A systematic review of federated learning in the healthcare area: From the perspective of data properties and applications.</a> In Applied Sciences (Switzerland) (Vol. 11, Issue 23). MDPI</li>
+                <li>Huang, L.; Yin, Y.; Fu, Z.; Zhang, S.; Deng, H.; Liu, D. <a href="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0230706">LoAdaBoost: Loss-based AdaBoost federated machine learning with reduced computational complexity on IID and non-IID intensive care data.</a> PLoS ONE 2020, 15, e0230706.</li>
+                <li>Guo, J., Shah, D. J., & Barzilay, R. (2018). <a href="https://arxiv.org/abs/1809.02256">Multi-Source Domain Adaptation with Mixture of Experts</a></li>
+                <li>Hsieh, Kevin; Phanishayee, Amar; Mutlu, Onur; Gibbons, Phillip (2020-11-21). <a href="https://arxiv.org/abs/1910.00189">The Non-IID Data Quagmire of Decentralized Machine Learning".</a> International Conference on Machine Learning. PMLR: 4387–4398.</li>
+                <li>Acar, Durmus Alp Emre; Zhao, Yue; Navarro, Ramon Matas; Mattina, Matthew; Whatmough, Paul N.; Saligrama, Venkatesh (2021). <a href="https://arxiv.org/abs/2111.04263v2">Federated Learning Based on Dynamic Regulation</a> </li>
+                <li>For a lighter read, check out <a href="https://federated.withgoogle.com/">this comic from Google</a></li>
+            </ol>
+
          
-    </div--->
+    </div>
 
 
 
     <div class="card" id="tat">
-        <h2> Coastal differences in tattoo pieces </h2>
-        <h5>An Instagram network analysis, September, 2022</h5>
+        <h2> Coastal differences in artists' Instgram captions </h2>
+        <h5>A network analysis of tattoo pieces, September, 2022</h5>
         <img src="tattoo/coasts.png" class="title_img" alt="Two photographs of fall trees in the Hudson Valley, and the coast of San Francisco side by side. The photos are arranged so the slopes of the hillsides match, almost making them look like a single landscape"></img>
          
         To me, tattoos seem like a great way to express autonomy, aesthetics, and interests all in one place. I'm always interested in hearing peoples tattoo stories, and my Instagram feed is usually about 70% images of fresh ink on any given day.
@@ -106,7 +298,7 @@ layout: default
 
         <h3>Instagram tattoo posts as networks</h3>
         We can represent all the Instagram posts and their hashtags in a network like the one below. Nodes in this network are both posts (shown on the left), and tags (shown on the right). Lines connect posts to their corresponding tags.
-        <img src="tattoo/schematic.png" class="post_img" alt="A cartoon illustration of a network of Instagram posts and their hashtags. Two rows of black circles are connected by various lines. One black circle on the left corresponds to the hashtag #fineline, which is connected to two unique posts using the tag."></img>
+        <img src="tattoo/schematic.png" class="post_img" style="width:40% !important;" alt="A cartoon illustration of a network of Instagram posts and their hashtags. Two rows of black circles are connected by various lines. One black circle on the left corresponds to the hashtag #fineline, which is connected to two unique posts using the tag."></img>
 
         If you want to know how to make a network like this using Python, you can see the code <a href="https://github.com/jastiso/insta_tattoo"> here</a>. 
 
