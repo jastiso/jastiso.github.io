@@ -28,7 +28,12 @@ layout: default
     </style>
   <h2> Posts </h2>
   <ul class="toc-list" role="list">
-    <li>
+    <!---li>
+        <a href="#dml2">
+          <span class="title">Double/debiased machine learning II: application<span class="leaders" aria-hidden="true"></span></span>
+        </a>
+      </li>
+    <li--->
       <a href="#fl">
         <span class="title">Federated learning for clinical applications<span class="leaders" aria-hidden="true"></span></span>
       </a>
@@ -45,7 +50,7 @@ layout: default
     </li>
     <li>
       <a href="#dml">
-        <span class="title">Double/debiased machine learning<span class="leaders" aria-hidden="true"></span></span>
+        <span class="title">Double/debiased machine learning I: theory<span class="leaders" aria-hidden="true"></span></span>
       </a>
     </li>
   </ul>
@@ -53,6 +58,271 @@ layout: default
 
 <div class="row">
   <div class="leftcolumn"> 
+    
+     <!---div class="card">
+      <h2>Double/debiased machine learning II: application</h2>
+      <h5>, November, 2021</h5>
+      <div class="fakeimg" style="height:200px;">Image</div>
+      <h1>Example, with code</h1>
+        We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, here's a reminder of the steps of DML. 
+
+        For simplicity, we're going to use a similar data generating process we discuessed above, but with one change. Now, \(\theta\) is going to be a function of \(X\). This means that treatment effect will differ for different individuals. This is expected in medical contextx - for example, people with high body mass (X) tend to reach lower enesthetics depths (Y) for the same dose of an anesthetic (T). When \(\theta\) is a function of \(X\), it is called a heterogeneous, of conditional average treatment effect (abbreviated CATE in the package nomenclature).
+        
+        $$ {Y = T\theta_{0}(X) + g_{0}(X) + U, E[U | X,T] = 0]} $$
+        $$ {T = m_{0}(X) + V, E[V | X] = 0} $$
+        
+        As a reminder, \(X\) are our patient features, \(Y\) is an predictor of outcome or risk, and \(T\) is an indicator of treatment. While in theory, \(T\) can be binary, continuous, or categorical, the specific code we are discussing here does not work for categorical treatments. \(\theta_0\) is the conditional average treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
+        
+        <pre><code class="python"> simulating data code </code>></pre>
+        
+        We're also going to split our data into folds for evaluation. It's important to remember that each training fold is going to be further split within the DML estimator, so we want to make sure there are enough observations in the fold to split further.
+        
+        <pre><code class="python"> data splitting code </code>></pre>
+        
+        The econML package has different 'estimator' functions that all take data, a Y model (\(g_0(X)\)), and a T model (\(m_0(X)\)) as input. Therefore, we're going to start with step 2 listed above: estimating \(T\) (we'll do the data splitting process later). You can really do this however you want, we're just going to define a simple random forest model here. econML has the benefit of working with GridSearchCV object as well, so we're actually going to define not one speciifc model, but a set models with different parameterizations (if you aren't familiar with GridSearchCV, check out its docs).
+        
+        <pre><code class="python">
+        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.model_selection import GridSearchCV
+        
+        # parameters for forest
+        params = {
+            'max_depth': [5, 10],
+            'min_samples_leaf': [2, 4],
+            'min_samples_split': [2, 4],
+            'class_weight': ['balanced', None],
+            'n_estimators':[400, 1000]
+            }
+        
+        t_mdls = GridSearchCV(RandomForestRegressor(),
+                                params,
+                                cv=nFold,
+                                verbose=1,
+                                scoring='f1_macro')
+        t_mdl = t_mdls.fit(X_train, y_train).best_estimator_ 
+        </code>></pre>
+
+        You can evaluate these models any way you want to. We'll use ROC
+        <pre><code class="python"> 
+        from sklearn.metrics import roc_auc_score, roc_curve
+        import matplotlib.pyplot as plt
+        
+        plt.figure()
+        pred = t_mdl.predict_proba(X_test)[:,1]
+            
+        fpr, tpr, _ = roc_curve(y_test,pred,drop_intermediate=False)
+        roc_auc = roc_auc_score(y_test,pred)
+
+        plt.plot(fpr, tpr,
+                lw=lw, label='Risk: %0.2f' % roc_auc)
+        plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Outcome ROC Curves')
+        plt.legend(loc="best")
+        plt.show() 
+        </code>></pre>
+        
+        <div class="fakeimg">Image of graph</div>
+
+        We can do exactly the same thing for the \(Y\) model. Let's use a gradient boosted classifier to mix things up.
+        
+        <pre><code class="python"> 
+        from xgboost import XGBClassifier
+        # parameters for XGB
+        params = {
+            'max_depth': range (2, 10, 1),
+            'n_estimators': range(60, 220, 40),
+            'learning_rate': [0.1, 0.01, 0.05]
+            }
+        y_mdls = GridSearchCV(XGBClassifier(use_label_encoder=False,eval_metric='logloss', n_jobs=1),
+                                params,cv=nFold,n_jobs=nJobs,verbose=1,scoring = 'f1_macro')
+        
+        y_mdl = y_mdls.fit(X_train_clean, np.ravel(y_train)).best_estimator_
+        </code>></pre>
+
+        <pre><code class="python"> 
+        plt.figure()
+
+        pred = y_mdl.predict_proba(X_test)[:,1]
+            
+        fpr, tpr, _ = roc_curve(y_test,pred,drop_intermediate=False)
+        roc_auc = roc_auc_score(y_test,pred)
+
+        plt.plot(fpr, tpr,
+                lw=lw, label='Risk: %0.2f' % roc_auc)
+        plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Outcome ROC Curves')
+        plt.legend(loc="best")
+        plt.show() 
+        </code>></pre>
+        <div class="fakeimg">Image of graph</div>
+        
+        We can now pick an estimator. econML has 3 main estimators that provide confidence intervals. SparseLinear and Linear estimator will only work if you have many more observations than variables (see this link for comparisons of different estimators). For my data, this was not the case, so left me with 1 option: CausalForest estimator (REF). Like random forest models, this estimator also has the benefit of being able to estimate non-linear treatment effects in a piece-wise fashion.
+        
+        <pre><code class="python"> 
+        from econml.dml import CausalForestDML
+        
+        est = CausalForestDML(model_y=y_mdl, model_t=t_mdl, discrete_treatment=True, cv=5)
+        est.fit(Y=y_train, T=T_train, X=X_train) 
+        </code>></pre>
+        
+        This function takes care of the cross-fitting procedure! The argument cv defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
+        
+        Also similar to RandomForestCLassifiers in scikit learn, the CausalForest estimator has many other parameters. If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weightnig option (XXX). This is because the causal forest method makes use of a specific weighting strategy already (REF). 
+        
+        Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearns Grid or RandomSearchCV functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one. For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run
+        
+        <pre><code class="python"> 
+        import pandas as pd
+        from sklearn.model_selection import KFold
+        
+        # save the scores so we can plot them
+        no_score = pd.DataFrame(columns=['depth', 'min_leaf', 'min_split', 'n', 'score'])
+        # parameters for causal forest
+        est_params = {
+            'max_depth': [5, 10, None],
+            'min_samples_leaf': [5, 2],
+            'min_samples_split': [10, 4],
+            'n_estimators': [100, 500]
+        }
+        n_iter = 20  # number of random parameter sets
+        skf = StratifiedKFold(n_splits=nFold)
+        </code></pre>
+        
+        Now that we how our cross validation and parameters set up, we can find the best parameters. We'll first pick a random starting set, and specify a model
+        
+        <pre><code class="python">        
+        # randomly pick some parameters
+        n = np.random.choice(est_params['n_estimators'])
+        d = np.random.choice(est_params['max_depth'])
+        l = np.random.choice(est_params['min_samples_leaf'])
+        s = np.random.choice(est_params['min_samples_split'])
+
+        # get the cate estimate
+        est = CausalForestDML(model_y=y_mdl,
+                            model_t=t_mdl,
+                            discrete_treatment=True, 
+                            verbose=0, 
+                            max_depth=d,
+                            min_samples_leaf=l,
+                            min_samples_split=s,
+                            n_estimators=n)
+        </code>></pre>
+        
+        Now we can evaluate this parameter selection across all folds
+        <pre><code class="python">
+        # stratified cv
+        for train_index, test_index in skf.split(x, y):
+            X_htrain, X_htest = x[train_index], x[test_index]
+            y_htrain, y_htest = y[train_index], y[test_index]
+            T_htrain, T_htest = t[train_index], t[test_index]
+
+            est.fit(Y=np.ravel(y_htrain), T=T_htrain, X=X_htrain)
+            scores.append(est.score(y_htest, T_htest, X=X_htest))
+
+            curr_dict = {'depth': [d],
+                        'min_leaf': [l],
+                        'min_split': [s],
+                        'n': [n],
+                        'score': [np.mean(scores)],
+                        'score_sc': [np.std(scores)],
+                        'med': [med]}
+            no_score = pd.concat([hp_score, curr_dict])
+        </code>></pre>
+        
+        If you repeat this process and save all the scores, you can then pick the best parameter set
+
+        <pre><code class="python">
+        # pick the best parameters, and fit the model
+        best_n = no_score.loc[no_score['score'] == no_score['score'].min(), 'n'].values[0]
+        best_d = no_score.loc[no_score['score'] == no_score['score'].min(), 'depth'].values[0]
+        best_msl = no_score.loc[no_score['score'] == no_score['score'].min(), 'min_leaf'].values[0]
+        best_mss = no_score.loc[no_score['score'] == no_score['score'].min(), 'min_split'].values[0]
+        best_est = CausalForestDML(model_y=y_mdl,
+                                    model_t=t_mdl,
+                                    verbose=0, cv=5,
+                                    max_depth=best_d,
+                                    min_samples_leaf=best_msl,
+                                    min_samples_split=best_mss,
+                                    n_estimators=best_n)
+        best_est.fit(np.ravel(y_train), T_train, X=X_train)
+        </code>></pre>
+        
+        The 'score' function (if you use the default option) gives you the mean squared error for the last step of the DML algorithm: regressing the residuals of your two machine learning models against eachother. It uses this error as a proxy for error in estimating $$\theta$$.
+        
+        <pre><code class="python"> 
+        import seaborn as sns
+        
+        # print scores for each medicine
+        no_score['param_set'] = ["_".join(x) for x in hp_score[['n', 'depth', 'min_leaf', 'min_split']].astype(str).values]
+        sns.stripplot(data=no_score,  y="score", hue="param_set", size=10)
+        plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
+        </code>></pre>
+        <div class="fakeimg">Image of graph</div>
+        
+        We can now fit the model using the parameters that gave the lowest score
+        
+        <pre><code class="python"> 
+        dml = CausalForestDML(model_y=y_mdl,
+                            model_t=t_mdl,
+                            verbose=0, cv=5,
+                            max_depth=best_d,
+                            min_samples_leaf=best_msl,
+                            min_samples_split=best_mss,
+                            n_estimators=best_n)
+        </code>></pre>
+        
+        We can now look at the distribution for of CATE's for all individuals in the test set.
+        
+        <pre><code class="python"> 
+        # plot
+        n_bins = 10
+        effect = est.effect(X=X_test_clean)
+        plt.hist(effect, bins = n_bins, label=med,alpha=.8, color=colors[med_idx])
+        plt.title('Effect Values')
+        plt.xlabel('Effect')
+        plt.ylabel('Count')    
+        </code>></pre>
+        <div class="fakeimg">Image of graph</div>
+
+        We can also look at the CI for $$\theta$$ in a single individual.
+
+        <pre><code class="python"> 
+        # get individual CATES
+        patient_idx = np.random.randint(np.shape(X_test)[0])
+                
+        # get cate
+        cate = mdl.effect(X_test[patient_idx:patient_idx+1,])[0]
+        
+        # get cate CI
+        lb, ub = mdl_dict[name].effect_interval(X_test_clean[patient_idx:patient_idx+1,], alpha=0.05)
+        
+        # plot CATEs with CI for individual patients
+        plt.figure(figsize=(8,6))
+        plt.errorbar(1, cate, yerr=ci, 
+                        fmt="o", ecolor='k', zorder=1)
+        plt.tight_layout()
+        </code>></pre>
+        <div class="fakeimg">Image of graph</div>
+
+        How'd we do? Since this is simulated data, we can see how well our estimated treament matches the true effect
+
+        <pre><code class="python"> 
+        # plot   
+        </code>></pre>
+
+        We did pretty well! As expected, given the simulated data. This concludes the extent of the code walkthrough. If you're still looking for more, check out the other resources I found useful below.
+        
+    </div>
+  </div--->
+
     
     <div class="card" id="fl">
         <h2>Federated learning for clinical applications</h2>
@@ -252,7 +522,6 @@ layout: default
 
          
     </div>
-
 
 
     <div class="card" id="tat">
@@ -706,9 +975,6 @@ layout: default
         </div>
 
 
-
-
-
         <div class="card" id="dml">
         <h2>Double/debiased machine learning</h2>
         <h5>Light- to medium-math explanation of the method with tutorials, June, 2021</h5>
@@ -1115,7 +1381,8 @@ layout: default
         
             </p>
         </div>
-   <!---   <div class="card">
+   
+        <!---   <div class="card">
       <h2>Another 'academia to industry' story'</h2>
       <h5>An advice-free recouting of my experience, Sep 2, 2017</h5>
       <div class="fakeimg" style="height:200px;">Image</div>
@@ -1160,279 +1427,7 @@ layout: default
 
       
     </div>
-  </div> 
- <!---   <div class="card">
-      <h2>TITLE HEADING</h2>
-      <h5>Title description, Sep 2, 2017</h5>
-      <div class="fakeimg" style="height:200px;">Image</div>
-      <h1>Example, with code</h1>
-        We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, here's a reminder of the steps of DML. 
+  </div---> 
 
-        For simplicity, we're going to use a similar data generating process we discuessed above, but with one change. Now, \(\theta\) is going to be a function of \(X\). This means that treatment effect will differ for different individuals. This is expected in medical contextx - for example, people with high body mass (X) tend to reach lower enesthetics depths (Y) for the same dose of an anesthetic (T). When \(\theta\) is a function of \(X\), it is called a heterogeneous, of conditional average treatment effect (abbreviated CATE in the package nomenclature).
-        
-        $$ {Y = T\theta_{0}(X) + g_{0}(X) + U, E[U | X,T] = 0]} $$
-        $$ {T = m_{0}(X) + V, E[V | X] = 0} $$
-        
-        As a reminder, \(X\) are our patient features, \(Y\) is an predictor of outcome or risk, and \(T\) is an indicator of treatment. While in theory, \(T\) can be binary, continuous, or categorical, the specific code we are discussing here does not work for categorical treatments. \(\theta_0\) is the conditional average treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
-        
-        <pre><code class="python"> simulating data code </code>></pre>
-        
-        We're also going to split our data into folds for evaluation. It's important to remember that each training fold is going to be further split within the DML estimator, so we want to make sure there are enough observations in the fold to split further.
-        
-        <pre><code class="python"> data splitting code </code>></pre>
-        
-        The econML package has different 'estimator' functions that all take data, a Y model (\(g_0(X)\)), and a T model (\(m_0(X)\)) as input. Therefore, we're going to start with step 2 listed above: estimating \(T\) (we'll do the data splitting process later). You can really do this however you want, we're just going to define a simple random forest model here. econML has the benefit of working with GridSearchCV object as well, so we're actually going to define not one speciifc model, but a set models with different parameterizations (if you aren't familiar with GridSearchCV, check out its docs).
-        
-        <pre><code class="python">
-        from sklearn.ensemble import RandomForestRegressor
-        from sklearn.model_selection import GridSearchCV
-        
-        # parameters for forest
-        params = {
-            'max_depth': [5, 10],
-            'min_samples_leaf': [2, 4],
-            'min_samples_split': [2, 4],
-            'class_weight': ['balanced', None],
-            'n_estimators':[400, 1000]
-            }
-        
-        t_mdls = GridSearchCV(RandomForestRegressor(),
-                                params,
-                                cv=nFold,
-                                verbose=1,
-                                scoring='f1_macro')
-        t_mdl = t_mdls.fit(X_train, y_train).best_estimator_ 
-        </code>></pre>
-
-        You can evaluate these models any way you want to. We'll use ROC
-        <pre><code class="python"> 
-        from sklearn.metrics import roc_auc_score, roc_curve
-        import matplotlib.pyplot as plt
-        
-        plt.figure()
-        pred = t_mdl.predict_proba(X_test)[:,1]
-            
-        fpr, tpr, _ = roc_curve(y_test,pred,drop_intermediate=False)
-        roc_auc = roc_auc_score(y_test,pred)
-
-        plt.plot(fpr, tpr,
-                lw=lw, label='Risk: %0.2f' % roc_auc)
-        plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Outcome ROC Curves')
-        plt.legend(loc="best")
-        plt.show() 
-        </code>></pre>
-        
-        <div class="fakeimg">Image of graph</div>
-
-        We can do exactly the same thing for the \(Y\) model. Let's use a gradient boosted classifier to mix things up.
-        
-        <pre><code class="python"> 
-        from xgboost import XGBClassifier
-        # parameters for XGB
-        params = {
-            'max_depth': range (2, 10, 1),
-            'n_estimators': range(60, 220, 40),
-            'learning_rate': [0.1, 0.01, 0.05]
-            }
-        y_mdls = GridSearchCV(XGBClassifier(use_label_encoder=False,eval_metric='logloss', n_jobs=1),
-                                params,cv=nFold,n_jobs=nJobs,verbose=1,scoring = 'f1_macro')
-        
-        y_mdl = y_mdls.fit(X_train_clean, np.ravel(y_train)).best_estimator_
-        </code>></pre>
-
-        <pre><code class="python"> 
-        plt.figure()
-
-        pred = y_mdl.predict_proba(X_test)[:,1]
-            
-        fpr, tpr, _ = roc_curve(y_test,pred,drop_intermediate=False)
-        roc_auc = roc_auc_score(y_test,pred)
-
-        plt.plot(fpr, tpr,
-                lw=lw, label='Risk: %0.2f' % roc_auc)
-        plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Outcome ROC Curves')
-        plt.legend(loc="best")
-        plt.show() 
-        </code>></pre>
-        <div class="fakeimg">Image of graph</div>
-        
-        We can now pick an estimator. econML has 3 main estimators that provide confidence intervals. SparseLinear and Linear estimator will only work if you have many more observations than variables (see this link for comparisons of different estimators). For my data, this was not the case, so left me with 1 option: CausalForest estimator (REF). Like random forest models, this estimator also has the benefit of being able to estimate non-linear treatment effects in a piece-wise fashion.
-        
-        <pre><code class="python"> 
-        from econml.dml import CausalForestDML
-        
-        est = CausalForestDML(model_y=y_mdl, model_t=t_mdl, discrete_treatment=True, cv=5)
-        est.fit(Y=y_train, T=T_train, X=X_train) 
-        </code>></pre>
-        
-        This function takes care of the cross-fitting procedure! The argument cv defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
-        
-        Also similar to RandomForestCLassifiers in scikit learn, the CausalForest estimator has many other parameters. If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weightnig option (XXX). This is because the causal forest method makes use of a specific weighting strategy already (REF). 
-        
-        Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearns Grid or RandomSearchCV functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one. For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run
-        
-        <pre><code class="python"> 
-        import pandas as pd
-        from sklearn.model_selection import KFold
-        
-        # save the scores so we can plot them
-        no_score = pd.DataFrame(columns=['depth', 'min_leaf', 'min_split', 'n', 'score'])
-        # parameters for causal forest
-        est_params = {
-            'max_depth': [5, 10, None],
-            'min_samples_leaf': [5, 2],
-            'min_samples_split': [10, 4],
-            'n_estimators': [100, 500]
-        }
-        n_iter = 20  # number of random parameter sets
-        skf = StratifiedKFold(n_splits=nFold)
-        </code></pre>
-        
-        Now that we how our cross validation and parameters set up, we can find the best parameters. We'll first pick a random starting set, and specify a model
-        
-        <pre><code class="python">        
-        # randomly pick some parameters
-        n = np.random.choice(est_params['n_estimators'])
-        d = np.random.choice(est_params['max_depth'])
-        l = np.random.choice(est_params['min_samples_leaf'])
-        s = np.random.choice(est_params['min_samples_split'])
-
-        # get the cate estimate
-        est = CausalForestDML(model_y=y_mdl,
-                            model_t=t_mdl,
-                            discrete_treatment=True, 
-                            verbose=0, 
-                            max_depth=d,
-                            min_samples_leaf=l,
-                            min_samples_split=s,
-                            n_estimators=n)
-        </code>></pre>
-        
-        Now we can evaluate this parameter selection across all folds
-        <pre><code class="python">
-        # stratified cv
-        for train_index, test_index in skf.split(x, y):
-            X_htrain, X_htest = x[train_index], x[test_index]
-            y_htrain, y_htest = y[train_index], y[test_index]
-            T_htrain, T_htest = t[train_index], t[test_index]
-
-            est.fit(Y=np.ravel(y_htrain), T=T_htrain, X=X_htrain)
-            scores.append(est.score(y_htest, T_htest, X=X_htest))
-
-            curr_dict = {'depth': [d],
-                        'min_leaf': [l],
-                        'min_split': [s],
-                        'n': [n],
-                        'score': [np.mean(scores)],
-                        'score_sc': [np.std(scores)],
-                        'med': [med]}
-            no_score = pd.concat([hp_score, curr_dict])
-        </code>></pre>
-        
-        If you repeat this process and save all the scores, you can then pick the best parameter set
-
-        <pre><code class="python">
-        # pick the best parameters, and fit the model
-        best_n = no_score.loc[no_score['score'] == no_score['score'].min(), 'n'].values[0]
-        best_d = no_score.loc[no_score['score'] == no_score['score'].min(), 'depth'].values[0]
-        best_msl = no_score.loc[no_score['score'] == no_score['score'].min(), 'min_leaf'].values[0]
-        best_mss = no_score.loc[no_score['score'] == no_score['score'].min(), 'min_split'].values[0]
-        best_est = CausalForestDML(model_y=y_mdl,
-                                    model_t=t_mdl,
-                                    verbose=0, cv=5,
-                                    max_depth=best_d,
-                                    min_samples_leaf=best_msl,
-                                    min_samples_split=best_mss,
-                                    n_estimators=best_n)
-        best_est.fit(np.ravel(y_train), T_train, X=X_train)
-        </code>></pre>
-        
-        The 'score' function (if you use the default option) gives you the mean squared error for the last step of the DML algorithm: regressing the residuals of your two machine learning models against eachother. It uses this error as a proxy for error in estimating $$\theta$$.
-        
-        <pre><code class="python"> 
-        import seaborn as sns
-        
-        # print scores for each medicine
-        no_score['param_set'] = ["_".join(x) for x in hp_score[['n', 'depth', 'min_leaf', 'min_split']].astype(str).values]
-        sns.stripplot(data=no_score,  y="score", hue="param_set", size=10)
-        plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
-        </code>></pre>
-        <div class="fakeimg">Image of graph</div>
-        
-        We can now fit the model using the parameters that gave the lowest score
-        
-        <pre><code class="python"> 
-        dml = CausalForestDML(model_y=y_mdl,
-                            model_t=t_mdl,
-                            verbose=0, cv=5,
-                            max_depth=best_d,
-                            min_samples_leaf=best_msl,
-                            min_samples_split=best_mss,
-                            n_estimators=best_n)
-        </code>></pre>
-        
-        We can now look at the distribution for of CATE's for all individuals in the test set.
-        
-        <pre><code class="python"> 
-        # plot
-        n_bins = 10
-        effect = est.effect(X=X_test_clean)
-        plt.hist(effect, bins = n_bins, label=med,alpha=.8, color=colors[med_idx])
-        plt.title('Effect Values')
-        plt.xlabel('Effect')
-        plt.ylabel('Count')    
-        </code>></pre>
-        <div class="fakeimg">Image of graph</div>
-
-        We can also look at the CI for $$\theta$$ in a single individual.
-
-        <pre><code class="python"> 
-        # get individual CATES
-        patient_idx = np.random.randint(np.shape(X_test)[0])
-                
-        # get cate
-        cate = mdl.effect(X_test[patient_idx:patient_idx+1,])[0]
-        
-        # get cate CI
-        lb, ub = mdl_dict[name].effect_interval(X_test_clean[patient_idx:patient_idx+1,], alpha=0.05)
-        
-        # plot CATEs with CI for individual patients
-        plt.figure(figsize=(8,6))
-        plt.errorbar(1, cate, yerr=ci, 
-                        fmt="o", ecolor='k', zorder=1)
-        plt.tight_layout()
-        </code>></pre>
-        <div class="fakeimg">Image of graph</div>
-
-        How'd we do? Since this is simulated data, we can see how well our estimated treament matches the true effect
-
-        <pre><code class="python"> 
-        # plot   
-        </code>></pre>
-
-        We did pretty well! As expected, given the simulated data. This concludes the extent of the code walkthrough. If you're still looking for more, check out the other resources I found useful below.
-        
-    </div>
-  </div>
-  <div class="rightcolumn">
-    <div class="card">
-      <h3>Popular Post</h3>
-      <div class="fakeimg">Image</div><br>
-      <div class="fakeimg">Image</div><br>
-      <div class="fakeimg">Image</div>
-    </div>
-    
-  </div>
---->
 </div>
 
