@@ -59,7 +59,7 @@ layout: default
 <div class="row">
   <div class="leftcolumn"> 
     
-    <div class="card">
+    <div id="dml2" class="card">
         <h2>Double/debiased machine learning II: application</h2>
         <h5>Application of the DML method to simulated data, with code, October, 2022</h5>
         <img src="dml/dml_bird.jpg" class="title_img" alt="Photograph of two wading birds, facing opposite directions (great blue heron and snowy egret). Photo taken with vintage 300mm Nikon lens"></img>
@@ -1125,13 +1125,11 @@ layout: default
             <h3>What is double machine learning</h3>
             To me -- and potentially, <a class="ext" href="https://youtu.be/eHOjmyoPCFU?t=110"> its creator </a>-- Double Machine Learning sounds like a trendy name you would give a method to try to sound impressive in developer spaces. Double (or debiased) machine learning is actually a way to estimate specific causal effects in large, complex data [1]. Previously many causal 
             modeling methods relied on assuming a specific form of the data rather than learning it - namely assuming that variables were normally distributed and linearly related to each other. In addition to these faulty assumptions, these methods don't allow for complex data where the entropy of the parameter space increases with increasing observations (in other words - most large, modern datasets). Combined, these features made causal inference difficult to apply to realworld problems.
-            
-            
+            <br><br>
             A method called double machine learning (DML) allows causal inference to coexist with complex data with few assumptions, which has drummed up a lot of well-deserved excitement about the method (primarily in economics). 
             When I was trying to learn more about DML, I found that there weren't as many resources out there as I had hoped and that most of the resources that were out there took a very theoretical approach. I wanted to create a resource that explained the theory at a higher level and had a larger emphasis on code based explainations.  
             This post focuses on understanding how the DML algorthim works. If you want to skip to the application, you can look at my <a href="#dml2">my second DML post</a> and this <a class="ext" href="https://econml.azurewebsites.net/spec/estimation/dml.html">tutorial</a> from econML.
-
-            
+            <br><br>
             <h4>What clinical problems can DML be used for?</h4>
             The creation of this methods aligns nicely with some trends in clinical informatics (my current field). Clinical machine learning projects have made a major push towards building risk or diagnostic models. Less attention has been devoted to using
             machine learning to suggest treatments or interventions. DML presents one path forward - for a particular causal structure. 
@@ -1178,7 +1176,7 @@ layout: default
             If these assumptions are not met, then the resulting estimate canot be interpretted causally. That's not to say it isn't useful, but it changes the types of conclusions we can draw. 
             With these assumptions fulfilled, we can accurately say that "the treatment effect was calculated to be X%". Without it, we can say that, 
             "the proportion of observations who experienced the outcome, after adjusting for baseline confounders, was estimated to be X% higher for those who received treatment compared to those who did not."
-
+            <br><br>
             Caveats:
             <ol>
                 <li> categorical treatment - at the moment, there isn't a way to use DML for a categorical treatment variable that also provides confidence intervals. Other methods, such as doubly robust learning, might be better suited here.</li>
@@ -1253,10 +1251,10 @@ layout: default
             
             Let's imagine you're given some X, T, and Y data, as well as the data generating equations above. You're then asked to estimate what theta is. 
             One first attempt might be to build one machine learning model of \(T\theta_{0} + g_{0}(X)\) and \(g_0(X)\), then regress out \(T\) to solve for \(\theta_0\).  
-            
+            <br><br>
             This is a little tricky because \(g_0(X)\) is not the influence of \(X\) on \(Y\), its the influence of \(X\) on the part of \(Y\) that isn’t influenced by \(T \times \theta_0\). Therefore, we have to do this iteratively: get an initial guess for \(\theta_0\) in order to estimate \(g_0(X)\); then use that estimate of \(g_0(X)\) to solve for \(\theta_0\).
             In code, the direct method would look like this:
-            
+            <br><br>
             First, we'd simulate our data, and build our machine learning estimate of \(Y\) from \(T\theta_{0} + g_{0}(X)\) (we'll call this model \(l_0(X)\))
             <pre><code class="python"> 
             from sklearn.ensemble import RandomForestRegressor
@@ -1307,9 +1305,9 @@ layout: default
             
             If our estimate is good, we would expect the normalized difference between our estimate of \(\theta\) and the real theta to
             be centered on 0.
-
+            <br><br>
             This histogram shows that is not the case. Our estimate is way off and centered on a positive value. What went wrong?
-            
+            <br><br>
             At a high level, part of what went wrong is that we did not explicitly model the effect of \(X\) on \(T\). That influence is biasing our estimate. 
             Illustrating this explicitly is where our partially linear data generating process comes in handy. We can write out an equation for the error in our estimate.
             The goal here would be for the left-hand side to converge to 0 as we get more data.
@@ -1336,7 +1334,7 @@ layout: default
 
             We can write out a new error equation like so:
 
-            
+            <br><br>
             \(\sqrt{n}(\hat{\theta_0} - \theta_0) =\)<span style="color:#9b6981">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i\)</span> \(+\) <span style="color:#7887a4">\((EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i))\)</span> \(+ ...  \)
         
             <ul>
@@ -1388,11 +1386,11 @@ layout: default
             <img src="dml/nocf_orth.png" class="post_img" alt="A blue histogram of treatment estimation errors centered on -8, ranging from about -12 to -4"></img>
 
             And we have greatly reduced (but not eliminated) our bias!
-
+            <br><br>
             For this specific data generating process, we now have a way of estimating \(\theta\) without regularization bias! However, I mentioned earlier that we want to be 
             able to estimate more than only this process. In particular, step three involves linear regression, and only works in our partially linear example. How do
             we generalize the method of estimating \(\theta\)?
-            
+            <br><br>
             The least squares solution for linear relationships essentially finds the parameters for a line that minimizes the error between the predicted points on 
             the line, and the observed data. We can write this as the minimization of a cost function of our data and true parameters
             
@@ -1416,11 +1414,11 @@ layout: default
             Technically, this is a direction al Gateaux derivative. Practically, what this means is that we expect that the true value of \(\theta\) would be robust to 
             small purturbations in the nuisance parameters. This has the benefit of giving use estimates that will be stable in the presence of small changes to our
             ML models.
-            
+            <br><br>
             There are whole branches of mathematics dedicated to solving these types of equations with moment conditions, and there is no single good solution. All the 
             different solutions are called 'DML estimators'. Rather than getting into any specific estimator here, we're just going to trust that they exist, and move on.
             Whatever package you use to apply the method should give some information on the estimators it implements.
-            
+            <br><br>
             We now have a more generalizable set of steps
             <ol>
                 <li> Estimate \(T\) from \(X\)</li>
@@ -1433,14 +1431,14 @@ layout: default
             estimator and comparing different models. Specifically, we can find the model that gives smallest value for our moment condition. The specific value of
             this function is usually called a 'score' or 'Neyman orthogonality score', and the closer to 0 it is the better. We would use this value to perform model 
             selection when applying this method.
-            
+            <br><br>
             Now, it's time to revisit out error equation in the partially linear case.
             
             $$ { \sqrt{n}(\hat{\theta_0} - \theta_0) = (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^nU_iV_i + (EV^2)^{-1}\frac{1}{\sqrt{n}}\sum_{i \in I}^n(\hat{m_0}(X_i) - m_0(X_i))(\hat{g_0}(X_i) - g_0(X_i)) + \frac{1}{\sqrt{n}}\sum_{i \in I}^{n}V_i(\hat{g_0}(X_i) - g_0(X_i)) } $$
             
             We've discussed the first two terms already, but I'm revealing the last term we had hidden previously.
             If any overfitting is present in \(\hat{g_0}\), the estimate will pick up some noise from the noise term \(U\). This will slow down the convergence of this new term to 0.
-            
+            <br><br>
             The solution to this bias is to fit \(g\) and \(m\) on a different set of data than the set used to estimate \(\theta\). Like how cross-validation avoids overfitting 
             during parameter selection, this method (called cross-fitting) avoids overfitting in our estimation of \(\theta\). This changes our DML steps slightly.
             
