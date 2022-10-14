@@ -28,11 +28,11 @@ layout: default
     </style>
   <h2> Posts </h2>
   <ul class="toc-list" role="list">
-    <!---li>
+    <li>
         <a href="#dml2">
           <span class="title">Double/debiased machine learning II: application<span class="leaders" aria-hidden="true"></span></span>
         </a>
-      </li--->
+      </li>
     <li>
       <a href="#fl">
         <span class="title">Federated learning for clinical applications<span class="leaders" aria-hidden="true"></span></span>
@@ -59,132 +59,244 @@ layout: default
 <div class="row">
   <div class="leftcolumn"> 
     
-     <!---div class="card">
-      <h2>Double/debiased machine learning II: application</h2>
-      <h5>, November, 2021</h5>
-      <div class="fakeimg" style="height:200px;">Image</div>
-      <h1>Example, with code</h1>
-        We're now going to walk through an example application of DML to a simulated medical dataset. If you didn't read the above section, here's a reminder of the steps of DML. 
+    <div class="card">
+        <h2>Double/debiased machine learning II: application</h2>
+        <h5>Application of the DML method to simulated data, with code, October, 2022</h5>
+        <img src="dml/dml_bird.jpg" class="title_img" alt="Photograph of two wading birds, facing opposite directions (great blue heron and snowy egret). Photo taken with vintage 300mm Nikon lens"></img>
+  
+        <h3>What is double/debiased machine learning?</h3>
+        Double or debiased machine learning (DML) is a method for estimating causal treatment effects from complex data <a href="#ref_dml2">[1]</a>. In biomedical settings, treatment effects can tell you how much the administration of a given medication (T) can decrease the risk of some adverse event (Y) while accounting for other confounding variables (X). Essentially, it isolates the arrow connecting T to Y in the diagram below. At a population level, this value is called the average treatment effect (ATE), or \(\theta\).
+         At the individual level, this value is called a heterogeneous treatment effect, conditional average treatment effect (CATE), or \(\theta(X)\) (the rest of this post will discuss CATEs rather than ATEs).
 
-        For simplicity, we're going to use a similar data generating process we discuessed above, but with one change. Now, \(\theta\) is going to be a function of \(X\). This means that treatment effect will differ for different individuals. This is expected in medical contextx - for example, people with high body mass (X) tend to reach lower enesthetics depths (Y) for the same dose of an anesthetic (T). When \(\theta\) is a function of \(X\), it is called a heterogeneous, of conditional average treatment effect (abbreviated CATE in the package nomenclature).
+         <img src="dml/causal_diag.png" class="post_img" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
+
+        If <a href="#causal">causal assumptions</a> are met <a href="#ref_dml2">[2]</a>, DML can provide us with accurate estimates of treatment effects, with confidence intervals, without making strict assumptions about the form of the data. The lack of strict assumptions is achieved by leveraging machine learning to estimate confounding effects (the X to Y and X to T arrows above).
+
+        In short, the method estimates treatment effects with a 3 step algorithm:
+        <ol>
+            <li> Estimate the mapping from X to Y with ML</li>
+            <li> Estimate the mapping from X to T with ML</li>
+            <li> Regress the residuals from (1) onto the residuals from (2). The results of this is the treatment effect</li>
+        </ol> 
+        If you want to learn more about the theory behind the method, check out my earlier <a href="#dml">post</a>. If not, there are two features of this algorithms 
+        implementation that are important moving forward. First, the algorithm makes use of internal sample-splitting procedure, so training data have to be big enough to be split within 
+        the algorithm. The second is that Step 3 is solved in such way that the solution is robust to changes in Step 1 and Step 2. This mean that we find values of \(\theta(X)\)
+        that are robust to changes in the Y and T models. This also means that the performance of your Y and T models do not have to be spectacular to achieve good estimates of the treatment 
+        effect. This second feature is something we're going to explore via a simulated example.
+
+        <h3> Data generating process</h3>
+        We're now going to walk through an example application of DML to a simulated dataset. We will use
+         <a class='ext' href="https://github.com/microsoft/EconML/blob/main/notebooks/Double%20Machine%20Learning%20Examples.ipynb">the following equations</a> to generate our dataset: 
         
-        $$ {Y = T\theta_{0}(X) + g_{0}(X) + U, E[U | X,T] = 0]} $$
-        $$ {T = m_{0}(X) + V, E[V | X] = 0} $$
+        $$ {Y=T\times \theta(X)+\langle X| \gamma \rangle + \epsilon,} $$
+        $$ {T \sim Bernoulli( f(X) ), f(X) = \sigma( \langle X| \beta \rangle) + \eta} $$
+        $$ {\theta(X) = e^{2 \times X_1}} $$
+
+        Essentially, these equations are saying the Y is a linear combination of variables from X plus \(\theta\) times the treatment, and T is a binarized, linear combination of other variables from X. Lastly, \(\theta\) is an exponential function based on the first column of X. More specifically,
+        <ul>
+            <li>Y the treatment effect times a binary indicator of treatment, plus a linear combination of variables from X, plus some noise. \(\gamma\) selects the and weights the columns of X included in the simulation.</li>
+            <li>T is the binary treatment variable. It is calculated by passing a linear combination of variables from X, weighted and selected by \(\beta\), into a sigmoidal logit function \(\sigma\).</li>
+            <li>\(\theta(X)\) is an exponential function of the first column of X times 2</li>
+            <li>\(\gamma\), \(\beta\) have 50 nonzero elements, which are drawn from a uniform distribution between -1 and 1</li> 
+            <li>\(\epsilon\), \(\eta\) are noise terms uniformly distributed between -1 and 1</li>
+            <li>X is a matrix with entries uniformly distributed between 0 and 1</li>
+        </ul>
         
-        As a reminder, \(X\) are our patient features, \(Y\) is an predictor of outcome or risk, and \(T\) is an indicator of treatment. While in theory, \(T\) can be binary, continuous, or categorical, the specific code we are discussing here does not work for categorical treatments. \(\theta_0\) is the conditional average treatment effect, the term we're interested in. We can simulate this data in python using the same code as before. As a reminder:
+        Here, we want to simulate data that would make prediction of the CATE values more difficult so we can evaluate performance outside of best-case-scenarios.
+         Therefore, we will simulate a situation with many correlated covariates (50) and many noise covariates (50). This paper <a href="#ref_dml2">[3]</a> compares DML performance across different widths of X.
         
-        <pre><code class="python"> simulating data code </code>></pre>
+        We can simulate our data in Python with the code below:
+        <pre><code class="python"> 
+        import numpy as np
+
+        def get_data(n, n_x, support_size, coef=2):
+            """
+            heterogeneous CATE data generating process
         
-        We're also going to split our data into folds for evaluation. It's important to remember that each training fold is going to be further split within the DML estimator, so we want to make sure there are enough observations in the fold to split further.
+            params:
+            :param bin_treat: a boolean indicating whether the treatment is binary (true) or continuous (false)
+            :param n: the number of observations to simulate
+            :param n_x: the number of columns of X to simulate
+            :param support_size: the number of columns of X that influence T and Y. Must be smaller than n_x
+            :return: x, y, t, and cate, the features, risk, treatment, and treatment effect
+            """
+            # patient features
+            x = np.random.uniform(0, 1, size=(n, n_x))
         
-        <pre><code class="python"> data splitting code </code>></pre>
+            # conditional average treatment effect
+            cate = [theta(xi, coef=coef) for xi in x]
+            # noise
+            u = np.random.uniform(-1, 1, size=[n, ])
+            v = np.random.uniform(-1, 1, size=[n, ])
+            # coefficients
+            support_Y = np.random.choice(np.arange(n_x), size=support_size, replace=False)
+            coefs_Y = np.random.uniform(-1, 1, size=support_size)
+            support_T = support_Y
+            coefs_T = np.random.uniform(-1, 1, size=support_size)
         
-        The econML package has different 'estimator' functions that all take data, a Y model (\(g_0(X)\)), and a T model (\(m_0(X)\)) as input. Therefore, we're going to start with step 2 listed above: estimating \(T\) (we'll do the data splitting process later). You can really do this however you want, we're just going to define a simple random forest model here. econML has the benefit of working with GridSearchCV object as well, so we're actually going to define not one speciifc model, but a set models with different parameterizations (if you aren't familiar with GridSearchCV, check out its docs).
+            # treatment
+            log_odds = np.dot(x[:, support_T], coefs_T) + u
+            t_sigmoid = 1 / (1 + np.exp(-log_odds))
+            t = np.array([np.random.binomial(1, p) for p in t_sigmoid])
+
+            # risk
+            y = cate * t + np.dot(x[:, support_Y], coefs_Y) + v
+        
+            return x, y, t, cate 
+        </code>></pre>
+        We can also explicitly define a function for \(\theta(X)\)
+        <pre><code class="python"> 
+        def theta(x, coef=2, ind=0):
+            """
+            exponential treatment effect as a function of patient characteristics (x)
+
+            :param x: the feature data for a single observation (size 1 x n_x)
+            :param coef: the coefficient in the exponential function (default 2)
+            :param ind: an integer indicating which column of x to use in the exponential function (default 0)
+            :return: the treatment effect for a given observation
+            """
+            return np.exp(coef * x[ind])
+        </code>></pre>
+
+        After simulating our data, we're also going to split off a test set from our data for evaluation. 
+        It's also important to remember that each training fold is going to be <a href="#crossfit">further split</a> within the DML estimator, so we want to make sure there are enough observations in the training set to split further.
+        
+        <pre><code class="python"> 
+        n = 5000
+        n_x= 100
+        support_size=50
+        x, y, t, cate = get_data(n, n_x, support_size, coef=2, bin_treat=True)
+        x_train, x_test, y_train, y_test, t_train, t_test, cate_train, cate_test = train_test_split(x, y, t, cate, test_size=0.8)    
+        </code>></pre>
+        
+        The broad goal from this point will be to see if we can build a model that accurately estimates \(\theta(X)\). 
+        In the DML algorithm, this happens in three steps: (1) train a model for T; (2) training a model for Y; and train an estimator for \(\theta(X)\). We'll be using <a class='ext' href="https://scikit-learn.org/stable/index.html">scikit-learn</a> for the machine learning model, and 
+        <a class='ext' href="https://www.microsoft.com/en-us/research/project/econml/">econML</a> for the DML estimator. 
+        
+        <h3>Train T model</h3>
+        You can really train your model however you want, we're just going to define a simple random forest model here. econML has the benefit of working with 
+        GridSearchCV objects and taking care of Y and T hyperparameter tuning for us (if you aren't familiar with GridSearchCV, check out its 
+        <a class='ext' href="https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html">docs</a>).
         
         <pre><code class="python">
-        from sklearn.ensemble import RandomForestRegressor
+        from sklearn.ensemble import RandomForestClassifier
         from sklearn.model_selection import GridSearchCV
         
         # parameters for forest
         params = {
             'max_depth': [5, 10],
-            'min_samples_leaf': [2, 4],
+            'min_samples_leaf': [2, 4, 10],
             'min_samples_split': [2, 4],
-            'class_weight': ['balanced', None],
             'n_estimators':[400, 1000]
             }
         
-        t_mdls = GridSearchCV(RandomForestRegressor(),
+        t_mdls = GridSearchCV(RandomForestClassifier(),
                                 params,
-                                cv=nFold,
-                                verbose=1,
-                                scoring='f1_macro')
-        t_mdl = t_mdls.fit(X_train, y_train).best_estimator_ 
+                                cv=5)
+        t_mdl = t_mdls.fit(x_train, t_train).best_estimator_  
         </code>></pre>
 
-        You can evaluate these models any way you want to. We'll use ROC
+        We'll use ROC to see how well our T model is doing
         <pre><code class="python"> 
         from sklearn.metrics import roc_auc_score, roc_curve
         import matplotlib.pyplot as plt
-        
-        plt.figure()
-        pred = t_mdl.predict_proba(X_test)[:,1]
-            
-        fpr, tpr, _ = roc_curve(y_test,pred,drop_intermediate=False)
-        roc_auc = roc_auc_score(y_test,pred)
 
-        plt.plot(fpr, tpr,
-                lw=lw, label='Risk: %0.2f' % roc_auc)
-        plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Outcome ROC Curves')
-        plt.legend(loc="best")
-        plt.show() 
+        # evaluate T
+        import matplotlib.pyplot as plt
+        
+        pred = t_mdl.predict_proba(x_test)[:,1]
+        
+        fpr, tpr, _ = roc_curve(t_test,pred,drop_intermediate=False)
+        roc_auc = roc_auc_score(t_test,pred)
+        
+        plt.plot(fpr, tpr)
+        plt.plot([0, 1], [0, 1], color='navy',linestyle='--')
+        plt.xlabel('False Positive')
+        plt.ylabel('True Positive')
         </code>></pre>
         
-        <div class="fakeimg">Image of graph</div>
+        <img src="dml/sim_t.png" class="post_img" alt=""></img>
 
-        We can do exactly the same thing for the \(Y\) model. Let's use a gradient boosted classifier to mix things up.
+        <pre><code class='python'>print(roc_auc)</code></pre>
+        <p><strong>Output:</strong></p>
+            <pre>
+            0.6471481
+            </pre>
+
+        Our T model AUC is 0.65, which is far from impressive. But remember,
+        we can (theoretically) get good CATEs even if our T model performance isn't great, so let's keep going.
+
+        <h3>Train Y model</h3>
+        We can do the same thing for the Y model. Let's use a gradient boosted classifier to mix things up.
         
         <pre><code class="python"> 
-        from xgboost import XGBClassifier
-        # parameters for XGB
+        # fit y
+        from xgboost import XGBRegressor
+        
+        # parameters for forest
         params = {
-            'max_depth': range (2, 10, 1),
-            'n_estimators': range(60, 220, 40),
-            'learning_rate': [0.1, 0.01, 0.05]
+            'max_depth': [5, 10],
+            'learning_rate': [0.1, 0.01, 0.05],
+            'n_estimators':[50, 400, 1000]
             }
-        y_mdls = GridSearchCV(XGBClassifier(use_label_encoder=False,eval_metric='logloss', n_jobs=1),
-                                params,cv=nFold,n_jobs=nJobs,verbose=1,scoring = 'f1_macro')
+        y_mdls = GridSearchCV(XGBRegressor(),
+                                params,cv=5,
+                                n_jobs=-1)
         
-        y_mdl = y_mdls.fit(X_train_clean, np.ravel(y_train)).best_estimator_
+        y_mdl = y_mdls.fit(x_train, y_train).best_estimator_
         </code>></pre>
 
+        For the continuous variable, we will evaluate our performance by calculating the bias, or the percent deviation from the true estimate.
         <pre><code class="python"> 
-        plt.figure()
-
-        pred = y_mdl.predict_proba(X_test)[:,1]
-            
-        fpr, tpr, _ = roc_curve(y_test,pred,drop_intermediate=False)
-        roc_auc = roc_auc_score(y_test,pred)
-
-        plt.plot(fpr, tpr,
-                lw=lw, label='Risk: %0.2f' % roc_auc)
-        plt.plot([0, 1], [0, 1], color='k', lw=2, linestyle='--')
-        plt.xlim([0.0, 1.0])
-        plt.ylim([0.0, 1.05])
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Outcome ROC Curves')
-        plt.legend(loc="best")
-        plt.show() 
+        # evaluate Y
+        pred = y_mdl.predict(x_test)
+        
+        plt.scatter(pred, y_test)
+        plt.plot([-1, 13], [-1, 13], color='navy',linestyle='--')
+        plt.xlabel('Predicted Y')
+        plt.ylabel('True Y')
         </code>></pre>
-        <div class="fakeimg">Image of graph</div>
+        <img src="dml/sim_y.png" class="post_img" alt=""></img>
+
+        <pre><code class='python'>np.mean(np.abs(pred - y_test) / y_test)</code></pre>
+        <p><strong>Output:</strong></p>
+            <pre>
+            0.4681890
+            </pre>
+        Similarly, we get mediocer performance when estimating Y. Our values are have a bias of about 47%, meaning that if our true Y value was 10, our model would be guessing 15.
         
-        We can now pick an estimator. econML has 3 main estimators that provide confidence intervals. SparseLinear and Linear estimator will only work if you have many more observations than variables (see this link for comparisons of different estimators). For my data, this was not the case, so left me with 1 option: CausalForest estimator (REF). Like random forest models, this estimator also has the benefit of being able to estimate non-linear treatment effects in a piece-wise fashion.
+        <h3> Train the estimator</h3>
+        We can now pick an estimator. econML has 3 main estimators that provide confidence intervals. The 'SparseLinear' and 'Linear' estimator will only work if you have many more observations than variables
+         (see this <a class="ext" href="https://econml.azurewebsites.net/spec/comparison.html">table</a> for comparisons of different estimators). For a lot of real-world data, this is not the case, therefore we will use the last remaining option: 
+         CausalForest estimator <a href="#ref_dml2">[4]</a>. Like random forest models, this estimator also has the benefit of being able to estimate non-linear treatment effects in a piece-wise fashion.
         
         <pre><code class="python"> 
+        # dml
         from econml.dml import CausalForestDML
         
-        est = CausalForestDML(model_y=y_mdl, model_t=t_mdl, discrete_treatment=True, cv=5)
-        est.fit(Y=y_train, T=T_train, X=X_train) 
+        est = CausalForestDML(model_y=y_mdl, model_t=t_mdl, cv=5)
+        est.fit(Y=y_train, T=t_train, X=x_train) 
         </code>></pre>
         
-        This function takes care of the cross-fitting procedure! The argument cv defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
+        This function takes care of the sample splitting procedure! The argument 'cv' defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
         
-        Also similar to RandomForestCLassifiers in scikit learn, the CausalForest estimator has many other parameters. If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weightnig option (XXX). This is because the causal forest method makes use of a specific weighting strategy already (REF). 
+
+        Also similar to 'RandomForestCLassifiers' in scikit learn, the 'CausalForest' estimator has many other parameters. 
+        If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. 
+        The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weighting option. 
+        This is because the causal forest method makes use of a specific weighting strategy already <a hrtef="#ref_dml2">[4]</a>. 
         
-        Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearns Grid or RandomSearchCV functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one. For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run
+
+        Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearn's 'GridSearchCV' or 'RandomSearchCV' functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one (you could also make a new class extending the 'CausalForest' class with a params attribute). 
+        For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, 
+        we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run.
         
         <pre><code class="python"> 
         import pandas as pd
         from sklearn.model_selection import KFold
         
         # save the scores so we can plot them
-        no_score = pd.DataFrame(columns=['depth', 'min_leaf', 'min_split', 'n', 'score'])
+        mse_score = pd.DataFrame(columns=['depth', 'min_leaf', 'min_split', 'n', 'score'])
         # parameters for causal forest
         est_params = {
             'max_depth': [5, 10, None],
@@ -196,7 +308,7 @@ layout: default
         skf = StratifiedKFold(n_splits=nFold)
         </code></pre>
         
-        Now that we how our cross validation and parameters set up, we can find the best parameters. We'll first pick a random starting set, and specify a model
+        Now that we have our cross validation and parameters set up, we can find the best parameters. We'll first pick a random starting set, and specify a model.
         
         <pre><code class="python">        
         # randomly pick some parameters
@@ -234,17 +346,17 @@ layout: default
                         'score': [np.mean(scores)],
                         'score_sc': [np.std(scores)],
                         'med': [med]}
-            no_score = pd.concat([hp_score, curr_dict])
+            mse_score = pd.concat([hp_score, curr_dict])
         </code>></pre>
         
         If you repeat this process and save all the scores, you can then pick the best parameter set
 
         <pre><code class="python">
         # pick the best parameters, and fit the model
-        best_n = no_score.loc[no_score['score'] == no_score['score'].min(), 'n'].values[0]
-        best_d = no_score.loc[no_score['score'] == no_score['score'].min(), 'depth'].values[0]
-        best_msl = no_score.loc[no_score['score'] == no_score['score'].min(), 'min_leaf'].values[0]
-        best_mss = no_score.loc[no_score['score'] == no_score['score'].min(), 'min_split'].values[0]
+        best_n = mse_score.loc[mse_score['score'] == mse_score['score'].min(), 'n'].values[0]
+        best_d = mse_score.loc[mse_score['score'] == mse_score['score'].min(), 'depth'].values[0]
+        best_msl = mse_score.loc[mse_score['score'] == mse_score['score'].min(), 'min_leaf'].values[0]
+        best_mss = mse_score.loc[mse_score['score'] == mse_score['score'].min(), 'min_split'].values[0]
         best_est = CausalForestDML(model_y=y_mdl,
                                     model_t=t_mdl,
                                     verbose=0, cv=5,
@@ -255,17 +367,17 @@ layout: default
         best_est.fit(np.ravel(y_train), T_train, X=X_train)
         </code>></pre>
         
-        The 'score' function (if you use the default option) gives you the mean squared error for the last step of the DML algorithm: regressing the residuals of your two machine learning models against eachother. It uses this error as a proxy for error in estimating $$\theta$$.
+        The 'score' function (if you use the default option) gives you the mean squared error for the last step of the DML algorithm: 
+        regressing the residuals of your two machine learning models against each other. It uses this error as a proxy for error in estimating \(\theta(X)\).
         
         <pre><code class="python"> 
-        import seaborn as sns
-        
-        # print scores for each medicine
-        no_score['param_set'] = ["_".join(x) for x in hp_score[['n', 'depth', 'min_leaf', 'min_split']].astype(str).values]
-        sns.stripplot(data=no_score,  y="score", hue="param_set", size=10)
-        plt.legend(bbox_to_anchor=(1.04,1), loc="upper left")
+        mse_score.sort_values(by='score', ascending=False, inplace=True)
+        mse_score = mse_score.reset_index()
+        mse_score.score.plot.line()
+        plt.ylabel('Score (MSE)')
+        plt.xlabel('Parameter Combination')
         </code>></pre>
-        <div class="fakeimg">Image of graph</div>
+        <img src="dml/score.png" class="post_img" alt=""></img>
         
         We can now fit the model using the parameters that gave the lowest score
         
@@ -279,20 +391,10 @@ layout: default
                             n_estimators=best_n)
         </code>></pre>
         
-        We can now look at the distribution for of CATE's for all individuals in the test set.
-        
-        <pre><code class="python"> 
-        # plot
-        n_bins = 10
-        effect = est.effect(X=X_test_clean)
-        plt.hist(effect, bins = n_bins, label=med,alpha=.8, color=colors[med_idx])
-        plt.title('Effect Values')
-        plt.xlabel('Effect')
-        plt.ylabel('Count')    
-        </code>></pre>
-        <div class="fakeimg">Image of graph</div>
+        <h3>Evaluation</h3>
 
-        We can also look at the CI for $$\theta$$ in a single individual.
+        Before we evaluate the model performance, We're going to talk about viewing individual CATEs and their confidence intervals.
+        In a clinical application, these values are what would be used in the decision-making process surrounding which interventions to use for a given patient.
 
         <pre><code class="python"> 
         # get individual CATES
@@ -310,19 +412,60 @@ layout: default
                         fmt="o", ecolor='k', zorder=1)
         plt.tight_layout()
         </code>></pre>
-        <div class="fakeimg">Image of graph</div>
+        <img src="dml/ind_cate.png" class="post_img" alt=""></img>
+        
+        This plot indicates that for this patient, the model estimates that adding the treatment will increase the outcome measure by 4, though it has a wide confidence interval, spanning about 1 to 10.
 
-        How'd we do? Since this is simulated data, we can see how well our estimated treament matches the true effect
+        Now we can move on to evaluation. How'd we do? Since this is simulated data, we can see how well our estimated treatment matches the true effect.
 
         <pre><code class="python"> 
-        # plot   
+        # plot 
+        plt.figure()
+        plt.scatter(x_test[:,0], cate_test, label='True Effect')
+        plt.scatter(x_test[:,0], cate_pred, color='orange', label='Predicted Effect')
+        plt.xlabel('Patient Features')
+        plt.ylabel('CATE')
+        plt.legend()  
         </code>></pre>
+        <img src="dml/te_bias.png" class="post_img" alt=""></img>
+        <pre><code class='python'>np.mean(np.abs(cate_pred - cate_test) / cate_test)</code></pre>
+        <p><strong>Output:</strong></p>
+            <pre>
+            0.1577856
+            </pre>
+        We did pretty well! Notably, we did pretty well even though our T and Y models had mediocre performance. Here our model bias is about 16%, substantially lower than the bias for Y.
+         What are the limits of this good performance though? What is the minimum number of samples? What happens when we add more variables, or more noise? 
+         This paper <a href="#ref_dml2">[3]</a> shows that DML (and all causal estimation methods) do better with more samples, fewer variables (though DML does better than other methods when the number of columns of X > 150), 
+         fewer confounding variables, and weaker confounding. 
 
-        We did pretty well! As expected, given the simulated data. This concludes the extent of the code walkthrough. If you're still looking for more, check out the other resources I found useful below.
-        
+        <h3>Evaluations with empirical data</h3>
+        We can use simulations to demonstrate that DML can perform pretty well in some messy situations - like when we get mediocre predictions of T and Y. However, all these demonstrations 
+        rely on the fact that we know the true value of \(\theta(X)\). In real-world settings, this is not realistically possible, so how do we evaluate our models? I've been exploring a few options:
+
+        <ul>
+           <li>Consistency in CATE and ATE estimates: While this method is more of a validity check than an evaluation, it is considered best practice for any method estimating 
+              conditional average treatment effects (CATEs, which were the subject of this post). This idea is that you bin your heterogeneous treatment effects into a few bins and recalculate average treatment effects within each bin.
+              While we didn't discuss them here, average treatment effects (ATE) are a sample level equivalent of the conditional averages. If your ATE and CATE distributions are similar, you can have more 
+              confidence that your CATE estimates are not spurious.
+           </li> 
+          <li>Benchmarking and medical knowledge: To some extent, we can leverage medical knowledge to confirm that our CATEs are in the right neighborhood. For example,
+                we have substantial scientific evidence that aspirin can lower people's risk for heart attack. Therefore, if our mean CATE is ~20%, indicating an increase in risk, we can be reasonably sure that the model isn't performing well. 
+            </li>
+            <li>Improved prediction: we can also put the evaluation back into a prediction-based framework. Mathematically, a patient’s true risk Y(t) = Y(t-1) + CATE. If our predictions get
+                better with the addition of the CATEs, we can at least conclude that our prediction is useful. It’s important to note that 'useful' is not the same as 'accurate’ and is not a validation of the causal assumptions of the model.
+            </li>
+        </ul>
+  
+          <h3 id="ref_dml2">References</h3>
+              <ol>
+                  <li>Chernozhukov, V., Chetverikov, D., Demirer, M., Duflo, E., Hansen, C., Newey, W., & Robins, J. (2016). Double/Debiased Machine Learning for Treatment and Causal Parameters. http://arxiv.org/abs/1608.00060</li>
+                  <li>Rose, S., & Rizopoulos, D. (2020). Machine learning for causal inference in Biostatistics. In Biostatistics (Oxford, England) (Vol. 21, Issue 2, pp. 336–338). NLM (Medline). https://doi.org/10.1093/biostatistics/kxz045</li>
+                  <li>McConnell KJ, Lindner S. Estimating treatment effects with machine learning. Health Serv Res. 2019 Dec;54(6):1273-1282. doi: 10.1111/1475-6773.13212. Epub 2019 Oct 10. PMID: 31602641; PMCID: PMC6863230.</li>
+                  <li>Oprescu, M., Syrgkanis, V., & Wu, Z. S. (2018). Orthogonal Random Forest for Causal Inference. http://arxiv.org/abs/1806.03467</li>
+                </ol>
+      </div>
     </div>
-  </div--->
-
+    
     
     <div class="card" id="fl">
         <h2>Federated learning for clinical applications</h2>
@@ -977,7 +1120,7 @@ layout: default
 
         <div class="card" id="dml">
         <h2>Double/debiased machine learning</h2>
-        <h5>Light- to medium-math explanation of the method with tutorials, June, 2021</h5>
+        <h5>Light- to medium-math explanation of the method with tutorials, June, 2022</h5>
         <img src="dml/dml_bird.jpg" class="title_img" alt="Photograph of two wading birds, facing opposite directions (great blue heron and snowy egret). Photo taken with vintage 300mm Nikon lens"></img>
         <p>
 
@@ -1025,7 +1168,7 @@ layout: default
                     theta using the residuals of those estimates (more details on this below). Additionally, there are now some pretty good packages implementing DML 
                     in python that play nicely with scikit learn. All together, making it a desireable new method for applied scientists, and motivating me to give it a try.
             
-            <h4>Caveats and alternatives</h4>
+            <h4 id="causal">Caveats and alternatives</h4>
             Like all methods, DML comes with important assumptions and caveats. 
             Assumptions (most of these are true of many causal methods):
             <ol>
@@ -1033,6 +1176,10 @@ layout: default
                 <li>Positivity - Everyone in the study has some probability of receiving treatment</li>
                 <li>You are recording all variables that influence Y and T in X. I think this is the most fraught assumption in medical contexts [2].</li>
             </ol>
+
+            If these assumptions are not met, then the resulting estimate canot be interpretted causally. That's not to say it isn't useful, but it changes the types of conclusions we can draw. 
+            With these assumptions fulfilled, we can accurately say that "the treatment effect was calculated to be X%". Without it, we can say that, 
+            "the proportion of observations who experienced the outcome, after adjusting for baseline confounders, was estimated to be X% higher for those who received treatment compared to those who did not."
 
             Caveats:
             <ol>
@@ -1043,7 +1190,9 @@ layout: default
             Alternatives
             <ol>
                 <li><a class="ext" href="https://econml.azurewebsites.net/spec/estimation/dr.html">Doubly robust learning</a></li>
-                <li><a class="ext" href="chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/https://watermark.silverchair.com/kxz042.pdf?token=AQECAHi208BE49Ooan9kkhW_Ercy7Dm3ZL_9Cf3qfKAc485ysgAAAtswggLXBgkqhkiG9w0BBwagggLIMIICxAIBADCCAr0GCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMiwE2F0xraZrG-U9LAgEQgIICjnQYE-ihiKqhjwGSIsl6-je11Cst4bUYpo6zWUoHBJQAORHyVuR-es86CuAcmST1wB9Fvhu4NaB8MgSr81LhJAJI55sJBqZLM_wy3BwkSsRXq_CghKe74Cxbl95vi2KuvJl00nFdb9LNKVjxfa7W3gek77nf9lMN4ZuU5mf2pJvXyqvCGfCnnrhdLtGTr5VNxMHT7E70aJQzaJ-Kxl6FHP4KQ00hhLi107zu8kLwzIj8z1vjuSZG1gWNFYeQ_0TUOR7b_QhKoORrbctaEWI2zDMY2DgRBaubNHzeclvDvl9izN8aZnbHNfJrosNysGya6nd-8eTymrqGeGZAXhdxKa-AIrqQHAPTcYODEbuzE5ItDJwwdHcyMlJUD0W-8dQSddnO-Vh9cJ04H6ESr4uSxfQ3DSf_uUXDIpmR9fah3wqeVz7XkV8L0ag0L_Ing2PXK3Tk9ZRTowqokfD8roGVSv0rXkBvaGbdvnnpw0gb-O95Wd1H4nPBIpn5HcssD4ZwgAPCS_1QUTj8mx3oabmfBuQZzyOV57U44Q28M8p-VehDO0U_c-HZ-LE423NJYaKXvaAVfJptGwT2wQJFaPMYKsQkdkYtL4Xi8-lFPUwCWqDuvfoo5yTH7NAUKX1a9gRI56xcgh3rZorYGXb7Vw1_SlOeRwNDuwfUdV54dQIyukuxLoG2NWUYXUqbTsJIXvqXxGvGv3qOhgOJ_6sZiZKbf6OkE_8hEKEmnc6sTzy0PQPWYbOvaHu-F_38KSvnyufZeYCiYth11NvAyoTGpVoCWl9AdP90gPVw15ihztC-5gmTq7yZdXhjFdYl9Fk3dl4Apuy34A9GbkNhjM_rjxNvHtvnuowbk9R0bKijj0LQKw">Targetted minimum loss based estimation</a></li>
+                <li><a class="ext" href="https://www.khstats.com/blog/tmle/tutorial">Targetted minimum loss based estimation (TLME)</a></li>
+                <li><a class='ext' href="https://analyticsindiamag.com/a-beginners-guide-to-bayesian-additive-regression-trees/">Bayesian Additive Regression Trees (BART)</a></li>
+                <li><a class='ext' href="https://deepai.org/publication/sparse-bayesian-causal-forests-for-heterogeneous-treatment-effects-estimation">Bayesian Causal Forest (BCF)</a></li>
             </ol>
             
             <h3>How DML allows causal inference and machine learning to mix </h3>
@@ -1281,7 +1430,7 @@ layout: default
                 <li> Solve moment equation to get \(\theta\)</li>
             </ol>
             
-            <h4>overfitting bias</h4>
+            <h4 id="crossfit">overfitting bias</h4>
             We now have a generalizable solution to regularization bias. Additionally, with the definition of a cost function, we have a method of evaluating our DML
             estimator and comparing different models. Specifically, we can find the model that gives smallest value for our moment condition. The specific value of
             this function is usually called a 'score' or 'Neyman orthogonality score', and the closer to 0 it is the better. We would use this value to perform model 
