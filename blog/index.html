@@ -104,7 +104,7 @@ layout: default
         
         Here, we want to simulate data that would make prediction of the CATE values more difficult so we can evaluate performance outside of best-case-scenarios.
          Therefore, we will simulate a situation with many correlated covariates (50) and many noise covariates (50). This paper <a href="#ref_dml2">[3]</a> compares DML performance across different widths of X.
-        <br>
+        <br><br>
         We can simulate our data in Python with the code below:
         <pre><code class="python"> 
         import numpy as np
@@ -279,12 +279,12 @@ layout: default
         </code>></pre>
         
         This function takes care of the sample splitting procedure! The argument 'cv' defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
-        <br>
+        <br><br>
         Also similar to 'RandomForestCLassifiers' in scikit learn, the 'CausalForest' estimator has many other parameters. 
         If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. 
         The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weighting option. 
         This is because the causal forest method makes use of a specific weighting strategy already <a hrtef="#ref_dml2">[4]</a>. 
-        <br>
+        <br><br>
         Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearn's 'GridSearchCV' or 'RandomSearchCV' functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one (you could also make a new class extending the 'CausalForest' class with a params attribute). 
         For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, 
         we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run.
@@ -413,7 +413,7 @@ layout: default
         <img src="dml/ind_cate.png" class="post_img" alt=""></img>
         
         This plot indicates that for this patient, the model estimates that adding the treatment will increase the outcome measure by 4, though it has a wide confidence interval, spanning about 1 to 10.
-        <br>
+        <br><br>
         Now we can move on to evaluation. How'd we do? Since this is simulated data, we can see how well our estimated treatment matches the true effect.
 
         <pre><code class="python"> 
