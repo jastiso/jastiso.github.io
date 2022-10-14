@@ -252,7 +252,12 @@ layout: default
         pred = y_mdl.predict(x_test)
         
         plt.scatter(pred, y_test)
-        plt.plot([-1, 13], [-1, 13], color='navy',linestyle='--')
+        lims = [
+            np.min([pred, y_test]),  # min of both axes
+            np.max([pred, y_test]),  # max of both axes
+        ]
+        plt.plot(lims, lims, color='navy',linestyle='--')
+
         plt.xlabel('Predicted Y')
         plt.ylabel('True Y')
         </code>></pre>
