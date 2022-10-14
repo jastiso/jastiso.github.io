@@ -166,11 +166,15 @@ layout: default
         n_x= 100
         support_size=50
         x, y, t, cate = get_data(n, n_x, support_size, coef=2, bin_treat=True)
-        x_train, x_test, y_train, y_test, t_train, t_test, cate_train, cate_test = train_test_split(x, y, t, cate, test_size=0.8)    
+        x_train, x_test, y_train, y_test, t_train, t_test, cate_train, cate_test = train_test_split(x, 
+                                                                                                    y, 
+                                                                                                    t, 
+                                                                                                    cate, 
+                                                                                                    test_size=0.8)    
         </code>></pre>
         
         The broad goal from this point will be to see if we can build a model that accurately estimates \(\theta(X)\). 
-        In the DML algorithm, this happens in three steps: (1) train a model for T; (2) training a model for Y; and train an estimator for \(\theta(X)\). We'll be using <a class='ext' href="https://scikit-learn.org/stable/index.html">scikit-learn</a> for the machine learning model, and 
+        In the DML algorithm, this happens in three steps: (1) train a model for T; (2) train a model for Y; and train an estimator for \(\theta(X)\). We'll be using <a class='ext' href="https://scikit-learn.org/stable/index.html">scikit-learn</a> for the machine learning model, and 
         <a class='ext' href="https://www.microsoft.com/en-us/research/project/econml/">econML</a> for the DML estimator. 
         
         <h3>Train T model</h3>
@@ -268,7 +272,7 @@ layout: default
             <pre>
             0.4681890
             </pre>
-        Similarly, we get mediocer performance when estimating Y. Our values are have a bias of about 47%, meaning that if our true Y value was 10, our model would be guessing 15.
+        Similarly, we get mediocer performance when estimating Y. Our values have a bias of about 47%, meaning that if our true Y value was 10, our model would be guessing 15.
         
         <h3> Train the estimator</h3>
         We can now pick an estimator. econML has 3 main estimators that provide confidence intervals. The 'SparseLinear' and 'Linear' estimator will only work if you have many more observations than variables
@@ -285,7 +289,7 @@ layout: default
         
         This function takes care of the sample splitting procedure! The argument 'cv' defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
         <br><br>
-        Also similar to 'RandomForestCLassifiers' in scikit learn, the 'CausalForest' estimator has many other parameters. 
+        Also similar to 'RandomForestClassifiers' in scikit learn, the 'CausalForest' estimator has many other parameters. 
         If you're familiar with random forests many of these parameters will be familiar: the number of trees to include, the maximum depth of those trees, etc. 
         The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weighting option. 
         This is because the causal forest method makes use of a specific weighting strategy already <a hrtef="#ref_dml2">[4]</a>. 
@@ -396,7 +400,7 @@ layout: default
         
         <h3>Evaluation</h3>
 
-        Before we evaluate the model performance, We're going to talk about viewing individual CATEs and their confidence intervals.
+        Before we evaluate the model performance, we're going to talk about viewing individual CATEs and their confidence intervals.
         In a clinical application, these values are what would be used in the decision-making process surrounding which interventions to use for a given patient.
 
         <pre><code class="python"> 
@@ -447,7 +451,7 @@ layout: default
 
         <ul>
            <li>Consistency in CATE and ATE estimates: While this method is more of a validity check than an evaluation, it is considered best practice for any method estimating 
-              conditional average treatment effects (CATEs, which were the subject of this post). This idea is that you bin your heterogeneous treatment effects into a few bins and recalculate average treatment effects within each bin.
+              conditional average treatment effects (CATEs, which were the subject of this post). The idea is that you bin your heterogeneous treatment effects into a few bins and recalculate average treatment effects within each bin.
               While we didn't discuss them here, average treatment effects (ATE) are a sample level equivalent of the conditional averages. If your ATE and CATE distributions are similar, you can have more 
               confidence that your CATE estimates are not spurious.
            </li> 
