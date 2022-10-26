@@ -284,7 +284,6 @@ layout: default
         from econml.dml import CausalForestDML
         
         est = CausalForestDML(model_y=y_mdl, model_t=t_mdl, cv=5)
-        est.fit(Y=y_train, T=t_train, X=x_train) 
         </code>></pre>
         
         This function takes care of the sample splitting procedure! The argument 'cv' defines how many folds to use for cross fitting. The default is 3, but the original paper recommends using 5 or 6 if possible.
@@ -294,16 +293,10 @@ layout: default
         The big exception in parameters between causal forests in econML and sklearn is that econML forest has no class weighting option. 
         This is because the causal forest method makes use of a specific weighting strategy already <a hrtef="#ref_dml2">[4]</a>. 
         <br><br>
-        Additionally, the econML estimator does not take the 'params' argument, and therefore can't be used as input into sklearn's 'GridSearchCV' or 'RandomSearchCV' functions. However we can do our own hyperparameter selection by comparing the 'score' between different parameter choices and selecting the lowest one (you could also make a new class extending the 'CausalForest' class with a params attribute). 
-        For brevity, we're going to use a random sampling strategy for hyperparameter selection. This means that rather than trying every possible parameter combination, 
-        we're going to randomly select some and pick the best option, assuming that we will get similar performance in the long run.
+        Additionally, the econML estimator can't be used as input into sklearn's 'GridSearchCV' or 'RandomSearchCV' functions. However, we can use econML's own hypterparameter tuning function 'tune'.
+        Rather than evaluating parameter performance across cross-validated folds of data, this fucntion uses out-of-bag scores on a single, small forest.
         
         <pre><code class="python"> 
-        import pandas as pd
-        from sklearn.model_selection import KFold
-        
-        # save the scores so we can plot them
-        mse_score = pd.DataFrame(columns=['depth', 'min_leaf', 'min_split', 'n', 'score'])
         # parameters for causal forest
         est_params = {
             'max_depth': [5, 10, None],
@@ -311,92 +304,16 @@ layout: default
             'min_samples_split': [10, 4],
             'n_estimators': [100, 500]
         }
-        n_iter = 20  # number of random parameter sets
-        skf = StratifiedKFold(n_splits=nFold)
+        est = est.tune(Y=y_train, T=t_train, X=x_train, params=est_params)
         </code></pre>
         
-        Now that we have our cross validation and parameters set up, we can find the best parameters. We'll first pick a random starting set, and specify a model.
-        
-        <pre><code class="python">        
-        # randomly pick some parameters
-        n = np.random.choice(est_params['n_estimators'])
-        d = np.random.choice(est_params['max_depth'])
-        l = np.random.choice(est_params['min_samples_leaf'])
-        s = np.random.choice(est_params['min_samples_split'])
+        Our estimator now has tuned parameters, but it still needs to be fit.
 
-        # get the cate estimate
-        est = CausalForestDML(model_y=y_mdl,
-                            model_t=t_mdl,
-                            discrete_treatment=True, 
-                            verbose=0, 
-                            max_depth=d,
-                            min_samples_leaf=l,
-                            min_samples_split=s,
-                            n_estimators=n)
-        </code>></pre>
-        
-        Now we can evaluate this parameter selection across all folds
-        <pre><code class="python">
-        # stratified cv
-        for train_index, test_index in skf.split(x, y):
-            X_htrain, X_htest = x[train_index], x[test_index]
-            y_htrain, y_htest = y[train_index], y[test_index]
-            T_htrain, T_htest = t[train_index], t[test_index]
-
-            est.fit(Y=np.ravel(y_htrain), T=T_htrain, X=X_htrain)
-            scores.append(est.score(y_htest, T_htest, X=X_htest))
-
-            curr_dict = {'depth': [d],
-                        'min_leaf': [l],
-                        'min_split': [s],
-                        'n': [n],
-                        'score': [np.mean(scores)],
-                        'score_sc': [np.std(scores)],
-                        'med': [med]}
-            mse_score = pd.concat([hp_score, curr_dict])
-        </code>></pre>
-        
-        If you repeat this process and save all the scores, you can then pick the best parameter set
-
-        <pre><code class="python">
-        # pick the best parameters, and fit the model
-        best_n = mse_score.loc[mse_score['score'] == mse_score['score'].min(), 'n'].values[0]
-        best_d = mse_score.loc[mse_score['score'] == mse_score['score'].min(), 'depth'].values[0]
-        best_msl = mse_score.loc[mse_score['score'] == mse_score['score'].min(), 'min_leaf'].values[0]
-        best_mss = mse_score.loc[mse_score['score'] == mse_score['score'].min(), 'min_split'].values[0]
-        best_est = CausalForestDML(model_y=y_mdl,
-                                    model_t=t_mdl,
-                                    verbose=0, cv=5,
-                                    max_depth=best_d,
-                                    min_samples_leaf=best_msl,
-                                    min_samples_split=best_mss,
-                                    n_estimators=best_n)
-        best_est.fit(np.ravel(y_train), T_train, X=X_train)
-        </code>></pre>
-        
-        The 'score' function (if you use the default option) gives you the mean squared error for the last step of the DML algorithm: 
-        regressing the residuals of your two machine learning models against each other. It uses this error as a proxy for error in estimating \(\theta(X)\).
-        
         <pre><code class="python"> 
-        mse_score.sort_values(by='score', ascending=False, inplace=True)
-        mse_score = mse_score.reset_index()
-        mse_score.score.plot.line()
-        plt.ylabel('Score (MSE)')
-        plt.xlabel('Parameter Combination')
-        </code>></pre>
-        <img src="dml/score.png" class="post_img" alt=""></img>
-        
-        We can now fit the model using the parameters that gave the lowest score
-        
-        <pre><code class="python"> 
-        dml = CausalForestDML(model_y=y_mdl,
-                            model_t=t_mdl,
-                            verbose=0, cv=5,
-                            max_depth=best_d,
-                            min_samples_leaf=best_msl,
-                            min_samples_split=best_mss,
-                            n_estimators=best_n)
-        </code>></pre>
+        est.fit(Y=y_train, T=t_train, X=x_train) 
+        </code></pre>
+
+        That's it! Now we can look into evaluating how well we did.
         
         <h3>Evaluation</h3>
 
