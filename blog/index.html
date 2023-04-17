@@ -34,7 +34,6 @@ layout: default
         </a>
       </li>
     <li>
-    <li>
         <a href="#dml2">
           <span class="title">Double/debiased machine learning II: application<span class="leaders" aria-hidden="true"></span></span>
         </a>
@@ -152,13 +151,13 @@ layout: default
 
         <br><br>
         In each of these sectors, there are various job titles related to 'data science'. While the majority of postings will list 'data scientist' as the job title, most could be described 
-        as a more granular level by one of these categories. The book <a href="#job_ref">'Build a Career in Data Science'</a> uses a graphical representation to illustrate
+        as a more granular level by one of these categories. The book <a class='ext' href="#job_ref">'Build a Career in Data Science'</a> uses a graphical representation to illustrate
          these different jobs based on their skillsets. I have recreated this graphic below. The three corners represent three common types of skills valued in data science:
           math/stats (+/-), coding/databases (<>), and domain knowledge/communication (the stack of books). Different jobs emphasize different combinations of these skills. For instance, the 'decision 
           scientist' data scientist depends mostly on communication or domain expertise and math/stats skills, while the 'data analyst' data scientist relies more on databases and domain expertise,
            and the 'MLOps' data scientist relies heavily on coding and math/stats. Additionally, there are some data science-adjacent positions that heavily rely on one of these types of skills
             (i.e., research scientist or data engineer). The purpose of this post is not to provide a detailed description of each of these jobs, but to give a starting point to dive in further.
-          The <a href="#job_ref">book</a> from which this graphic was taken is an excellent resource to learn more.
+          The <a class='ext' href="#job_ref">book</a> from which this graphic was taken is an excellent resource to learn more.
             <img src="ds/ds.png" class="post_img" alt=""></img>
   
         When I began my search for data science jobs, I was overwhelmed by the variety of skill sets listed in different job ads. This led me to the false assumption that I needed to be an
@@ -253,7 +252,7 @@ layout: default
          perspectives from books and blogs. Overall, I found this process quite taxing - however many of them gave me useful information or, in a minority of cases, a referral for a job.
   
          <br><br>
-         There are a lot of <a href="https://www.linkedin.com/business/learning/blog/career-success-tips/guide-to-informational-interviews">general advice and resources </a>available online for informational interviews.
+         There are a lot of <a class='ext' href="https://www.linkedin.com/business/learning/blog/career-success-tips/guide-to-informational-interviews">general advice and resources </a>available online for informational interviews.
           I also used my school's career center as a resource on this topic. Much of the advice on networking is tailored to different levels of familiarity, such as 
           reaching out to a friend, an acquaintance, or a stranger.
   
@@ -298,7 +297,7 @@ layout: default
   
         <br><br>
        When applying to large companies, it is common for your resume to be screened by a computer program that checks for your suitability for the job. These programs aim to match 
-       elements of your projects to the job description, although they can sometimes make <a href="https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G">egregious errors</a>.
+       elements of your projects to the job description, although they can sometimes make <a class='ext' href="https://www.reuters.com/article/us-amazon-com-jobs-automation-insight-idUSKCN1MK08G">egregious errors</a>.
         To tailor my resumes to each position, I used a tool provided by my university
         called ResumeTargetted. This tool helped to identify key words and phrases to include in my resume to make it a better match for the job. If you don't have access to a similar tool, 
         you can still try to use the language and terminology from the job ad in your application materials. I have no idea if this process of changing language was helpful or not, but 
@@ -368,9 +367,9 @@ layout: default
        <h3 id="job_refs">Other resources</h3>
        These were some other resources I used during the job search that helped me appreciate the diversity and non-linearity or career paths out there.
         <ul>
-          <li>Build a Career in Data Science <a href="https://www.goodreads.com/book/show/52661559-build-a-career-in-data-science">book</a> and <a href="https://open.spotify.com/show/78Nft51TuU3X2urEKfCuys">podcast</a> </li> 
-          <li>Dr. Tanya Jonker's <a href="https://tanyajonker.com/essays/">blog</a></li> 
-          <li><a href="https://twitter.com/LJampol">Dr. Lily Jampol</a> put on the career event that I found most true to my experience</li> 
+          <li>Build a Career in Data Science <a class='ext' href="https://www.goodreads.com/book/show/52661559-build-a-career-in-data-science">book</a> and <a class='ext' href="https://open.spotify.com/show/78Nft51TuU3X2urEKfCuys">podcast</a> </li> 
+          <li>Dr. Tanya Jonker's <a class='ext' href="https://tanyajonker.com/essays/">blog</a></li> 
+          <li><a class='ext' href="https://twitter.com/LJampol">Dr. Lily Jampol</a> put on the career event that I found most true to my experience</li> 
         </ul>
 
         
@@ -387,7 +386,7 @@ layout: default
 
          <img src="dml/causal_diag.png" class="post_img" alt="A graph with three nodes, labeled X, Y, and T. There are arrows connecting X to Y and T, and an arrow connecting T to Y"></img>
 
-        If <a href="#causal">causal assumptions</a> are met <a href="#ref_dml2">[2]</a>, DML can provide us with accurate estimates of treatment effects, with confidence intervals, without making strict assumptions about the form of the data. The lack of strict assumptions is achieved by leveraging machine learning to estimate confounding effects (the X to Y and X to T arrows above).
+        If <a class='ext' href="#causal">causal assumptions</a> are met <a href="#ref_dml2">[2]</a>, DML can provide us with accurate estimates of treatment effects, with confidence intervals, without making strict assumptions about the form of the data. The lack of strict assumptions is achieved by leveraging machine learning to estimate confounding effects (the X to Y and X to T arrows above).
 
         In short, the method estimates treatment effects with a 3 step algorithm:
         <ol>
@@ -395,7 +394,7 @@ layout: default
             <li> Estimate the mapping from X to T with ML</li>
             <li> Regress the residuals from (1) onto the residuals from (2). The results of this is the treatment effect</li>
         </ol> 
-        If you want to learn more about the theory behind the method, check out my earlier <a href="#dml">post</a>. If not, there are two features of this algorithms 
+        If you want to learn more about the theory behind the method, check out my earlier <a class='ext' href="#dml">post</a>. If not, there are two features of this algorithms 
         implementation that are important moving forward. First, the algorithm makes use of internal sample-splitting procedure, so training data have to be big enough to be split within 
         the algorithm. The second is that Step 3 is solved in such way that the solution is robust to changes in Step 1 and Step 2. This mean that we find values of \(\theta(X)\)
         that are robust to changes in the Y and T models. This also means that the performance of your Y and T models do not have to be spectacular to achieve good estimates of the treatment 
@@ -476,7 +475,7 @@ layout: default
         </code>></pre>
 
         After simulating our data, we're also going to split off a test set from our data for evaluation. 
-        It's also important to remember that each training fold is going to be <a href="#crossfit">further split</a> within the DML estimator, so we want to make sure there are enough observations in the training set to split further.
+        It's also important to remember that each training fold is going to be <a class='ext' href="#crossfit">further split</a> within the DML estimator, so we want to make sure there are enough observations in the training set to split further.
         
         <pre><code class="python"> 
         n = 5000
@@ -769,7 +768,7 @@ layout: default
                 <tr>
                     <td>Data structure</td>
                     <td>Naming conventions, file structures, etc.</td>
-                    <td>None, because it depends so much on the specific problem you’re working with. Here’s an example from neuroscience called <a href="https://github.com/bids-standard/">BIDS</a></td>
+                    <td>None, because it depends so much on the specific problem you’re working with. Here’s an example from neuroscience called <a class='ext' href="https://github.com/bids-standard/">BIDS</a></td>
                 </tr>
                 <tr>
                     <td>Data partitions</td>
@@ -845,7 +844,7 @@ layout: default
 
             If you’ve thought about the design of your federated learning pipeline and are ready to implement it, there are a few free packages in Python that can help you get your system up and running
             <ol>
-                <li><a href="https://github.com/OpenMined/PySyft">PySyft</a>
+                <li><a class='ext' href="https://github.com/OpenMined/PySyft">PySyft</a>
                     <div class="series_text" style="width:80% !important">A screenshot from a PySyft tutorial
                         <img src="fl/pysyft.png" class="series_img" style="width:80% !important"></img>
                     </div>
@@ -856,7 +855,7 @@ layout: default
                         <li>Currently, they want users to work with the team on new applications</li>
                     </ul>
                 </li>
-                <li><a href="https://www.tensorflow.org/federated/federated_learning">Tensorflow</a>
+                <li><a class='ext' href="https://www.tensorflow.org/federated/federated_learning">Tensorflow</a>
                     <div class="series_text" style="width:80% !important">A screenshot from a tensorflow tutorial
                         <img src="fl/tf.png" class="series_img" style="width:80% !important"></img>
                     </div>
@@ -865,7 +864,7 @@ layout: default
                         <li>No built-in support for privacy or non-IID data</li>
                     </ul>
                 </li>
-                <li><a href="https://fate.fedai.org/">FATE</a>
+                <li><a class='ext' href="https://fate.fedai.org/">FATE</a>
                     <div class="series_text" style="width:80% !important">A screenshot from a FATE tutorial
                         <img src="fl/fate.png" style="width:80% !important" class="series_img"></img>
                     </div>
@@ -970,7 +969,7 @@ layout: default
         We can represent all the Instagram posts and their hashtags in a network like the one below. Nodes in this network are both posts (shown on the left), and tags (shown on the right). Lines connect posts to their corresponding tags.
         <img src="tattoo/schematic.png" class="post_img" style="width:40% !important;" alt="A cartoon illustration of a network of Instagram posts and their hashtags. Two rows of black circles are connected by various lines. One black circle on the left corresponds to the hashtag #fineline, which is connected to two unique posts using the tag."></img>
 
-        If you want to know how to make a network like this using Python, you can see the code <a href="https://github.com/jastiso/insta_tattoo"> here</a>. 
+        If you want to know how to make a network like this using Python, you can see the code <a class='ext' href="https://github.com/jastiso/insta_tattoo"> here</a>. 
 
         To find groups in graphs, we are going to use a method that assigns distances to items based on how similar their connectivity is. So, two posts with the same hashtags would have a small distance, and posts with very different hashtags would have a large distance. We can then group the posts and hashtags such that distances are small within a group, and big between groups.
         But how many groups do we pick? If the best grouping gives us 10,000 groups is that useful? Rather than picking a specific number of groups, we're going to use a nested approach. This means that we're going to start with big groups, then look for smaller groups within those big groups, and repeat this process until
