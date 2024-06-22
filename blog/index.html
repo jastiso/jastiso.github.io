@@ -29,6 +29,11 @@ layout: default
   <h2> Posts </h2>
   <ul class="toc-list" role="list">
     <li>
+        <a href="#genai">
+          <span class="title"></span>Generative AI for automating appeals <span class="leaders" aria-hidden="true"></span></span>
+        </a>
+      </li>
+    <li>
         <a href="#job">
           <span class="title"></span>A non-linear, inefficient example of an 'academia-to-industry' career path <span class="leaders" aria-hidden="true"></span></span>
         </a>
@@ -48,6 +53,7 @@ layout: default
         <span class="title">Coastal differences in artists' Instgram captions <span class="leaders" aria-hidden="true"></span></span>
       </a>
     </li>
+    <li>
       <a href="#map">
         <span class="title">How many roads must a random walker walk down before it gets out of Reykjavik?<span class="leaders" aria-hidden="true"></span></span>
       </a>
@@ -62,6 +68,211 @@ layout: default
 
 <div class="row">
   <div class="leftcolumn"> 
+    <div class="card" id="genai">
+        <h2>Generative AI for automating appeals</h2>
+        <h5>Focusing on architecture, May 2024</h5>
+        <img src="genai/architecture.JPG" class="title_img" alt=""></img>
+        
+        <h3>Motivation, via a comparison to the show 'Grand Designs'</h3>
+
+        One of my favorite light-hearted TV shows of late is the British home design marvel 'Grand Designs' (as I am writing this, it is free to stream on YouTube). The show - hosted by British designed Kevin McCloud -
+         follows amateur,
+        first-time builders as they set out to construct their own home. Almost without fail, the new builders go from being very excited about everything the new home will bring them,
+        to miserable and downtrodden as delays and surprise costs push them to a breaking point. However, the episode (almost) always ends with
+         a beautiful building, a beaming builder, and an uplifting narrative from the host about how this particular modern glass box represents a great triumph of the human spirit. And I tend 
+         to agree with him. Building your first home takes an admirable amount of bravery and perseverance. Additionally, the disparate backgrounds of the people on show sometimes result in truly
+         unique and beautiful buildings.
+         <br><br>
+
+         When watching the show, I often see parallels between the trials and tribulations faced by the home-owner-turned-project-managers and those faced when managing tech projects. I am not
+         the first to draw such parallels - several participants on the show, as well as the authors of the project management book 
+         <a href="https://www.goodreads.com/book/show/61327449-how-big-things-get-done">'How Big Things Get Done'</a> Bent Flyvbjerg and Dan Gardener, have noted the similarities
+         between large projects in different mediums.
+         <br><br>
+
+         Flyvbjerg and Gardener takes this observation further by collecting and collating data from thousands of big projects across different sectors. Like the participants in 
+         'Grand Designs', these projects also usually go over budget and over time despite being run by professionals. However, there a few common features of successful projects that the authors discuss.
+         The feature most relevant to this post, is that successful (here, meaning on-time and on-budget) big projects are often made up of smaller repeated modules. One of the most memorable examples
+          of the project management principle is the Empire State Building - an architectural marvel that was also a project management success. Each floor of the building is very similar. This 
+          similarity allowed worker to rapidly increase their speed at they built more floors, because they could learn from the mistakes they made on lower floors. As an individual 
+          contributor trying to build a new data science team in an established company, I am often thinking about how single projects 
+          can be used as smaller, repeatable building blocks to bring the team towards a grander vision.
+          <br><br>
+
+          One of these instances occurred while participating in meetings regarding how to best incorporate new generative AI technologies into 
+          our business practices. Here, it was important to balance good project management with minimizing risk to patients and maximizing benefit to the company when considering 
+          use cases. And there are no shortages of resources listing all the possible use cases of generative AI in healthcare. The problem is picking the best one to start with.
+          If I were considering only project management, I would pick a simple app that used one foundation model, and one method for reducing hallucinations. This set up is common to many 
+          generative AI apps, and lessons learned in the simple case could be brought to other use cases. If I were only considering the minimal cost patients, I would probably 
+          start with some system that would be used only internally. <a hreaf="https://www.bain.com/insights/getting-the-most-out-of-generative-ai-in-healthcare/">Bain</a> 
+          did the hard work of considering 
+          the maximizing business value part of the cost function and identified a few cases that stood out above the rest.
+
+          <img src="genai/use_cases.gif" class="post_img" alt=""></img>
+
+        One of these use cases includes automating appeals. Part of their reasoning 
+        comes from knowledge that <a href="https://www.propublica.org/article/cigna-pxdx-medical-health-insurance-rejection-claims">payors automate denials with 
+            the assumption that appeals are exceedingly rare</a>. This means that denial are issued 
+        liberally and many appeals are likely to provide adjustments. Additionally, automatic letter writing is not something that can easily be 
+        achieved with simpler methodologies. The appeals use case does pretty well with other parts of the cost function too. Automating 
+        appeals can have big impacts on revenue, but zero to low impact on patient care if something goes wrong. Lastly, the 
+         architecture for an automated letter drafting system is like many other kinds of generative AI use cases. Therefore, choosing this as one of the first use cases can set 
+         you up well to scale in the future.
+
+        <h3>Generative AI Background</h3>
+        While an out-of-the-box LLM could probably generate a readable letter, it would likely hallucinate details about the patient or produce an overly generic letter 
+        if no modifications were made. We need to find a way to reduce these hallucinations and give the LLM access to specific information. This is why, at a high level, a 
+        generative AI system for automating appeals would have two main components: (1) a large language model (LLM) and (2) a method for retrieving documents 
+        relevant to the denial. Step 2 - the retrieval system - 
+        helps to address both the hallucinations and the lack of specific information. More specifically, step 2 refers to retrieval augmented generation (RAG). A process by which extra context 
+        is added to the prompt given to LLM to help it perform on specific tasks. From a data science perspective, setting up the retrieval system is a primary source of 
+        complexity in these apps.
+        <br><br>
+
+        Another way to reduce hallucinations is to fine tune the foundation LLM model on data relevant to denial letters. Since both the RAG system and fine-tuning 
+         can help reduce hallucinations, we'll go more in depth into the differences between the two next.
+
+        <h4>RAG vs Fine-tuning</h4>
+        <b>RAG:</b>
+        RAG (or retrieval augmented generation) is a process by which relevant context is added to the query to an LLM in hopes of getting more accurate and traceable answers. Retrieving 
+         context often relies on converting both the original query and the bank of contexts to vectors, matching the query-vector to the various context-vectors, and appending the 
+         contexts that are the most like the query. Performance of this retriever should generally be evaluated and periodically monitored. The documents available, the retrieval 
+         algorithm, and the vector embedding model are common thing to tweak during the process of building a RAG app.
+        <br><br>
+        One of the benefits of RAG is that it is computationally fairly cheap and easy to update compared to fine-tuning. Additionally, if the relevant contexts change, all you have
+         to do update your system is replace the documents, rather than retune the whole model. This is especially important in healthcare contexts where 
+         medical policies and contracts are changing on a yearly basis.
+        <br><br>
+
+        <b>Fine-tuning:</b> In general, fine-tuning refers to the process of taking a pretrained model and retraining it on a task different from its 
+        original purpose. When people talk about fine-tuning in generative AI applications, they are usually talking about taking an existing foundation model and training 
+        it to perform well in more specialized setting while retaining its general language capabilities, but you could also fine-tune the embedding models used in the RAG system (more on this later). 
+        <br><br>
+        Fine-tuning has many of the same problems training other deep neural network models has. It can be computational very expensive to fine tune a model for a production application (even small LLMs have 10s of billions of parameters).
+         While there are methods to minimize these costs (like <a href="https://arxiv.org/pdf/2402.07483">parameter efficient fine-tuning, PEFT</a>), they can still be prohibitive in some cases. Additionally, since fine-tuning will change the weights of the 
+         foundation model, it is wise to evaluate your final model both on its performance on the new task you are fine-tuning it on, and its general language accuracy too. 
+        <br><br>
+
+        To summarize:
+        <ul>
+            <li>Both RAG systems and fine-tuning can reduce hallucinations, but only RAG systems can provide the LLM with case specific documents.</li>
+            <li>Both RAG systems and fine-tuning require high quality, context specific data.</li>
+            <li>Fine-tuning requires more compute resources. These resources are spent on the tuning itself, and in
+                 the time it takes to re-evaluate the model after tuning.
+            </li>
+            <li>It is easier to update the corpus of documents for the RAG system when policies change than to retune an LLM.</li>
+        </ul>
+        
+        A state-of-the art approach would include
+         both RAG and fine-tuning, though it would be possible to build a performant app that only used the RAG system. The logic behind this distinction is that 
+         the model <i>might</i> benefit 
+         from learning the nuances of medical billing communication and jargon through fine-tuning, but it <i>needs</i> to be able to pull documents specific to the patient to
+          draft an acceptable letter.
+          For a first use case generative AI app targeted at automating denials, I would recommend starting with just a RAG system. After the RAG system is working, 
+        fine-tuning could be added if necessary to improve performance. However, since including both often increases performance, 
+        discussions of the specific structure of this system will incorporate fine-tuning the foundation model as well.
+
+        <h3>Example Architecture</h3>
+        Here, we show an example architecture for implementing a generative AI system for automating appeals. 
+        <div style="text-align: center;">
+            <img src="genai/gen_ai_denials.png" class="post_img" alt="">
+          </div>
+         The high-level flow of information through the system is:
+          <ol>
+              <li>Denial letter comes in, is parsed to text, and embedded as a vector.</li>
+              <li>Relevant information that can pulled directly from metadata are pulled.</li>
+              <li>The denial letter embedding is compared to the information in the vector database. The best matches are pulled.</li>
+              <li>The three pieces of information from the previous steps are combined into a query for the LLM</li>
+              <li>The new query + context is sent to the LLM (fine-tuned or otherwise), which generates an appeal letter.</li>
+              <li>The letter is stored for later evaluation.</li>
+              <li>The letter is either reviewed by a specialist or sent directly to the payor.</li>
+              <li>The payors response is recorded and monitored to assure the consistent performance of the system.
+              </li>
+          </ol>
+
+        There are a few main components that need setting up before the system can started generating appeals:
+        <h4 style="color:#635dff;">Vector database</h4>
+         
+        The RAG system will need access to all the relevant information it would need to write the appeal letter. Some of this information can 
+                likely be passed directly to the app based on metadata about the denial, and some of it will need to be searched for. For example, medical notes unique to 
+                a specific patient could be pulled based on patient identifiers, while grabbing the specific part of the medical policy relevant to the procedure might require a search. 
+                The exact division will likely depend on the data ecosystem at a given institution. Any information that 
+                needs to be searched for will need to be parsed into chunks of text, encoded as a vector, and stored in a vector database.
+                Most databases will be structured as some kind of hierarchical small world network, but sometimes more specialized topologies can be appropriate for some types 
+                of data. For example, this <a href="https://arxiv.org/abs/2402.07483">paper</a> explored using a tree structure for internal company data, which is hierarchical.
+            </li>
+        <h4 style="color:#0e8373;">Embedding model</h4> 
+        
+        The embedding model is responsible for transforming the documents and queries to vector representations. Depending on the 
+                    data the model is trained on, the model will likely have slightly different distances between similar words. Since healthcare is a pretty niche topic, 
+                    I’d recommend starting with some kind of clinical embedding mode such as <a href="'https://arxiv.org/abs/1904.05342">ClinBERT</a>. This model is trained on 
+                    clinical notes, if you are working with a vendor
+                     who provides embedding models specific to medical claims that would likely provide even better performance. You can also fine-tune embedding models on in house 
+                    data to create more useful embeddings.</li>
+        <h4 style="color:#635dff;">Retrieval</h4> 
+        
+        How to quickly retrieve the ‘best’ context is remains an area of active research. The simplest and most common method uses a 
+                KNN or a similar algorithm to pull the ‘top-k’ nearest neighbors. <a href="https://ai.meta.com/tools/faiss/">FAISS</a> or 
+                <a href="https://python.langchain.com/v0.2/docs/integrations/providers/annoy/">ANNOY</a> are common tools for generating and searching embedding spaces. Using ElasticSearch 
+                together with FAISS or ANNOY can combine these vector searches with standard text or metadata-based searches. Ideally, you would also set up some kind of 
+                evaluation of the quality of the retrieved documents. A common way to evaluate these systems is to have raters look through results and mark the success of the retrieval based on
+                 a defined rubric.
+        <h4 style="color:#0e8373;">Foundation model and fine-tuning</h4>
+         
+        Some consideration must be given to the foundation LLM at the start. In healthcare use cases, it is especially important 
+        to use foundation models that are HIPPA compliant and will not reuse queries in training sets, even if the data have already been deidentified.
+        Additionally, fine-tuning requires setting up some kind of new task to train the model on more specific contexts. For this application, 
+                 predicting the success of appeals from letters would be a good task, though it requires a large volume of appeal letters. In addition to the 
+                standard monitoring and evaluation required to fine-tune the foundation model, you will also want to set up some method of evaluating the general language
+                 capabilities of the fin- tuned model. There are several databases and <a href="https://github.com/openai/evals">packages</a> of question-answer style prompts available for these purposes. 
+                 While you're at it, you might as well throw in some 
+                extra <a href="https://huggingface.co/blog/evaluating-llm-bias">monitoring for bias</a> as well.</li>
+        
+        <b>Other parameters:</b> 
+        In addition to privacy, there are other features of the foundation model to consider when selecting which one to start with:
+        <ul>
+            <li>Number of parameters: This parameter is especially important if fine-tuning is going to be an integral part of your strategy. More parameters generally mean higher costs 
+                to tuning, though larger models might also often afford better performance.</li>
+            <li> Maximum context size: Different foundation models have different limits for the largest prompt they will accept. Lower limits mean that you cannot include as much context 
+                in your query. While it might seem intuitive that more context would lead to better performance, <a href="https://www.youtube.com/watch?v=TRjq7t2Ms5I">
+                    that is not always the case.</a> Regardless of your foundation model 
+                choice the amount of context to include is a parameter you can have to tune to improve performance.</li>
+            <li>Transparency: Different foundation models adhere to different levels of transparency. More transparent models allow you to have more confidence in 
+                the model’s performance 
+                and blind spots. Additionally, if the model demonstrates bias in specific situations more information about the model can often lead to faster fixes. 
+                In healthcare, minimizing bias in anything impacting patient care (or payments, in this case) should be considered.</li>
+            
+        </ul>
+        
+        
+        <br><br>
+
+        <h3>Conclusion</h3>>
+
+        I've tried to provide the motivation, and the roadmap for an automated appeals system as a first step towards building robust generative AI for healthcare. 
+        This use case could bring in lots of uncaptured revenue for 
+        a company without risking patient care. Automating appeals can also help healthcare companies keep pace with payors. All while creating a nice template
+         for future RAG applications. Now that we have laid out the vision and the plan, this would be the part of the 'Grand Designs' episode where the host 
+         foreshadows the setbacks to come and gives a knowing smile to the audience. 
+         
+         While I do not currently have the benefit of hindsight, it is worth pointing out any generative AI app in healthcare with be difficult. The 
+         US healthcare system is extremely complicated, and any RAG system faces an uphill battle trying to parse 
+         between the subtle differences in contract language for the multitude of different payors, contracts, medical policies, etc. But I think it's worth the struggle. 
+         With an eye towards simplicity, modularity, and good project management, 
+         these apps can be technical and management successes.
+
+  
+       <h3 id="genai_refs">Other Resources</h3>
+        <ul>
+          <li>Intro to LLMs <a href="https://medium.com/thedeephub/demystifying-large-language-models-a-beginners-guide-5791ba988298">series</a></li> 
+          <li>Original RAG <a href="https://arxiv.org/abs/2005.11401">paper</a>></li> 
+          <li>Jerry Liu's <a href="https://www.youtube.com/watch?v=TRjq7t2Ms5I">talk</a> on RAG systems and methods for improvement</li> 
+        </ul>
+
+        
+      </div>
+
+
 
     <div class="card" id="job">
         <h2>A non-linear, inefficient example of an 'academia-to-industry' career path</h2>
