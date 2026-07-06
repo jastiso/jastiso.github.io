@@ -75,6 +75,8 @@ layout: default
         
         <h3>Motivation, via a comparison to the show 'Grand Designs'</h3>
 
+        Note to the reader: I wrote this in early 2024 when the LLM landscape was very different than it is today. GPT 4o had not been released yet and agents were generally considered to be of limited use. It's interesting to see how designing LLM based systems has changes in the time since.
+
         One of my favorite light-hearted TV shows of late is the British home design marvel 'Grand Designs' (as I am writing this, it is free to stream on YouTube). The show - hosted by British designed Kevin McCloud -
          follows amateur,
         first-time builders as they set out to construct their own home. Almost without fail, the new builders go from being very excited about everything the new home will bring them,
@@ -129,8 +131,8 @@ layout: default
         complexity in these apps.
         <br><br>
 
-        Another way to reduce hallucinations is to fine tune the foundation LLM model on data relevant to denial letters. Since both the RAG system and fine-tuning 
-         can help reduce hallucinations, we'll go more in depth into the differences between the two next.
+        Another way to maintain letter quality and specificity is to fine tune a 'scorer' LLM model on data relevant to denial letters. Since both the RAG system and fine-tuning 
+         can help improve overall letter quality, we'll go more in depth into the differences between the two next.
 
         <h4>RAG vs Fine-tuning</h4>
         <b>RAG:</b>
@@ -155,7 +157,7 @@ layout: default
 
         To summarize:
         <ul>
-            <li>Both RAG systems and fine-tuning can reduce hallucinations, but only RAG systems can provide the LLM with case specific documents.</li>
+            <li>Both RAG systems and fine-tuning can improve letter quality, but only RAG systems can provide the LLM with case specific documents.</li>
             <li>Both RAG systems and fine-tuning require high quality, context specific data.</li>
             <li>Fine-tuning requires more compute resources. These resources are spent on the tuning itself, and in
                  the time it takes to re-evaluate the model after tuning.
@@ -164,11 +166,11 @@ layout: default
         </ul>
         
         A state-of-the art approach would include
-         both RAG and fine-tuning, though it would be possible to build a performant app that only used the RAG system. The logic behind this distinction is that 
+         both RAG and evaluations from fine-tunied models, though it would be possible to build a performant app that only used the RAG system and foundations models. The logic behind this distinction is that 
          the model <i>might</i> benefit 
          from learning the nuances of medical billing communication and jargon through fine-tuning, but it <i>needs</i> to be able to pull documents specific to the patient to
           draft an acceptable letter.
-          For a first use case generative AI app targeted at automating denials, I would recommend starting with just a RAG system. After the RAG system is working, 
+          For a first use case generative AI app targeted at automating denials, I would start with just a RAG system. After the RAG system is working, 
         fine-tuning could be added if necessary to improve performance. However, since including both often increases performance, 
         discussions of the specific structure of this system will incorporate fine-tuning the foundation model as well.
 
@@ -181,10 +183,11 @@ layout: default
           <ol>
               <li>Denial letter comes in, is parsed to text, and embedded as a vector.</li>
               <li>Relevant information that can pulled directly from metadata are pulled.</li>
-              <li>The denial letter embedding is compared to the information in the vector database. The best matches are pulled.</li>
+              <li>The denial reason embedding is compared to the information in the vector database. The best matches are pulled.</li>
               <li>The three pieces of information from the previous steps are combined into a query for the LLM</li>
-              <li>The new query + context is sent to the LLM (fine-tuned or otherwise), which generates an appeal letter.</li>
+              <li>The new query + context is sent to the LLM, which generates an appeal letter.</li>
               <li>The letter is stored for later evaluation.</li>
+              <li>The letter is scored by a different LLM judge (fine tuned or otherwise), and possibly rewritten.</li>
               <li>The letter is either reviewed by a specialist or sent directly to the payor.</li>
               <li>The payors response is recorded and monitored to assure the consistent performance of the system.
               </li>
